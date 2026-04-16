@@ -1,4 +1,3 @@
-// src/pages/users/UsersPage.jsx
 import { useMemo, useState } from "react";
 import UserForm from "../../components/users/UserForm";
 import UserTable from "../../components/users/UserTable";
@@ -37,18 +36,18 @@ function UsersPage() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) =>
-      `${user.nombre} ${user.correo} ${user.rol} ${user.estado}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
+        `${user.nombre} ${user.correo} ${user.rol} ${user.estado}`
+            .toLowerCase()
+            .includes(search.toLowerCase())
     );
   }, [users, search]);
 
   const handleSaveUser = (formData) => {
     if (editingUser) {
       setUsers((prev) =>
-        prev.map((user) =>
-          user.id === editingUser.id ? { ...user, ...formData } : user
-        )
+          prev.map((user) =>
+              user.id === editingUser.id ? { ...user, ...formData } : user
+          )
       );
       setEditingUser(null);
       return;
@@ -71,22 +70,7 @@ function UsersPage() {
   };
 
   return (
-    <div className="users-layout">
-      <aside className="sidebar">
-        <div className="sidebar__brand">
-          <h2>SIG-ARROZ</h2>
-          <p>Panel administrativo</p>
-        </div>
-
-        <nav className="sidebar__nav">
-          <button className="sidebar__item">Inicio</button>
-          <button className="sidebar__item sidebar__item--active">Usuarios</button>
-          <button className="sidebar__item">Roles</button>
-          <button className="sidebar__item">Permisos</button>
-        </nav>
-      </aside>
-
-      <main className="content">
+      <>
         <header className="content__header">
           <div>
             <h1>Gestión de usuarios</h1>
@@ -94,21 +78,21 @@ function UsersPage() {
           </div>
 
           <input
-            type="text"
-            placeholder="Buscar usuario..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="search-input"
+              type="text"
+              placeholder="Buscar usuario..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="search-input"
           />
         </header>
 
         <section className="content__grid">
           <div className="card">
             <UserForm
-              onSave={handleSaveUser}
-              editingUser={editingUser}
-              onCancelEdit={handleCancelEdit}
-              onRoleChange={setSelectedRole}
+                onSave={handleSaveUser}
+                editingUser={editingUser}
+                onCancelEdit={handleCancelEdit}
+                onRoleChange={setSelectedRole}
             />
           </div>
 
@@ -120,8 +104,7 @@ function UsersPage() {
         <section className="card">
           <UserTable users={filteredUsers} onEdit={handleEditUser} />
         </section>
-      </main>
-    </div>
+      </>
   );
 }
 
