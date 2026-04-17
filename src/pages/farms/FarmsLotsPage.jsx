@@ -50,14 +50,19 @@ const initialLots = [
 function FarmsLotsPage() {
     const [farms, setFarms] = useState(initialFarms);
     const [lots, setLots] = useState(initialLots);
-    const [selectedFarmId, setSelectedFarmId] = useState(1);
+    // Inicia con la primera finca seleccionada si existe, o null si no hay fincas
+    const [selectedFarmId, setSelectedFarmId] = useState(
+        initialFarms.length > 0 ? initialFarms[0].id : null
+    );
     const [editingLot, setEditingLot] = useState(null);
 
     const selectedFarm = useMemo(() => {
+        if (selectedFarmId === null) return null;
         return farms.find((farm) => farm.id === selectedFarmId) || null;
     }, [farms, selectedFarmId]);
 
     const filteredLots = useMemo(() => {
+        if (selectedFarmId === null) return [];
         return lots.filter((lot) => lot.fincaId === selectedFarmId);
     }, [lots, selectedFarmId]);
 
