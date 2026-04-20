@@ -11,14 +11,14 @@ function FarmsLotsPage() {
     const [selectedFarmId, setSelectedFarmId] = useState(null);
     const [editingLot, setEditingLot] = useState(null);
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
     // Cargar fincas y lotes desde el backend al montar el componente
     useEffect(() => {
         async function loadData() {
             try {
                 // 1. Cargar fincas
-                const resFincas = await fetch(
-                    `${import.meta.env.VITE_API_URL}/fincas/`
-                );
+                const resFincas = await fetch(`${API_URL}/fincas/`);
                 if (!resFincas.ok) {
                     console.error("Error al cargar fincas:", resFincas.status);
                     return;
@@ -26,15 +26,12 @@ function FarmsLotsPage() {
                 const dataFincas = await resFincas.json();
                 setFarms(dataFincas);
 
-                // Seleccionar la primera finca si existe
                 if (dataFincas.length > 0) {
                     setSelectedFarmId(dataFincas[0].id);
                 }
 
                 // 2. Cargar lotes
-                const resLotes = await fetch(
-                    `${import.meta.env.VITE_API_URL}/lotes/`
-                );
+                const resLotes = await fetch(`${API_URL}/lotes/`);
                 if (!resLotes.ok) {
                     console.error("Error al cargar lotes:", resLotes.status);
                     return;
@@ -47,7 +44,7 @@ function FarmsLotsPage() {
         }
 
         loadData();
-    }, []);
+    }, [API_URL]);
 
     const selectedFarm = useMemo(() => {
         if (selectedFarmId === null) return null;
@@ -56,46 +53,95 @@ function FarmsLotsPage() {
 
     const filteredLots = useMemo(() => {
         if (selectedFarmId === null) return [];
-        return lots.filter((lot) => lot.fincaId === selectedFarmId);
+        return lots.filter((lot) => lot.finca === selectedFarmId || lot.fincaId === selectedFarmId);
     }, [lots, selectedFarmId]);
 
-    // Por ahora sigue siendo solo en memoria; luego lo podemos conectar con POST al backend
-    const handleAddFarm = (farmData) => {
-        const newFarm = {
-            id: Date.now(),
-            ...farmData,
-        };
+    // Crear finca en backend
+    const handleAddFarm = async (farmData) => {
+        try {
+            const res = await fetch(`${API_URL}/fincas/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(farmData),
+            });
 
-        setFarms((prev) => [...prev, newFarm]);
-        setSelectedFarmId(newFarm.id);
-        setEditingLot(null);
+            if (!res.ok) {
+                console.error("Error al crear finca:", res.status);
+                return;
+            }
+
+            const newFarm = await res.json();
+            setFarms((prev) => [...prev, newFarm]);
+            setSelectedFarmId(newFarm.id);
+            setEditingLot(null);
+        } catch (error) {
+            console.error("Error de red al crear finca:", error);
+        }
     };
 
-    // Igual aquí: de momento actualiza el estado local
-    const handleSaveLot = (lotData) => {
-        if (!lotData.fincaId) return;
+    // Crear o actualizar lote en backend
+    const handleSaveLot = async (lotData) => {
+        if (!lotData.fincaId && !lotData.finca) return;
 
-        if (editingLot) {
-            setLots((prev) =>
-                prev.map((lot) =>
-                    lot.id === editingLot.id ? { ...lot, ...lotData } : lot
-                )
-            );
-            setEditingLot(null);
-            return;
-        }
-
-        const newLot = {
-            id: Date.now(),
-            ...lotData,
+        // Asegurar que enviamos el campo correcto para Django (finca = id de la finca)
+        const payload = {
+            finca: lotData.fincaId || lotData.finca,
+            area: lotData.area,
+            ubicacion: lotData.ubicacion,
+            tipo_suelo: lotData.tipoSuelo,
+            estado: lotData.estado,
         };
 
-        setLots((prev) => [...prev, newLot]);
+        try {
+            if (editingLot) {
+                // EDITAR lote existente: PUT /lotes/:id/
+                const res = await fetch(`${API_URL}/lotes/${editingLot.id}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!res.ok) {
+                    console.error("Error al actualizar lote:", res.status);
+                    return;
+                }
+
+                const updatedLot = await res.json();
+                setLots((prev) =>
+                    prev.map((lot) => (lot.id === updatedLot.id ? updatedLot : lot))
+                );
+                setEditingLot(null);
+            } else {
+                // CREAR lote nuevo: POST /lotes/
+                const res = await fetch(`${API_URL}/lotes/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!res.ok) {
+                    console.error("Error al crear lote:", res.status);
+                    return;
+                }
+
+                const newLot = await res.json();
+                setLots((prev) => [...prev, newLot]);
+            }
+        } catch (error) {
+            console.error("Error de red al guardar lote:", error);
+        }
     };
 
     const handleEditLot = (lot) => {
         setEditingLot(lot);
-        setSelectedFarmId(lot.fincaId);
+        // el backend devuelve 'finca' como id de finca
+        setSelectedFarmId(lot.finca || lot.fincaId);
     };
 
     const handleCancelEdit = () => {
