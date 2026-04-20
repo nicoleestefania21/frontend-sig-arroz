@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const initialForm = {
     nombre: "",
@@ -7,36 +7,48 @@ const initialForm = {
     vereda: "",
     area_total: "",
     tipo_suelo: "",
-    caracteristicas: "",
+    observaciones: "",
 };
 
-function FarmForm({ onSave }) {
+function FarmForm({ onSave, editingFarm, onCancelEdit }) {
     const [form, setForm] = useState(initialForm);
+
+    // Rellenar el formulario cuando se va a editar una finca
+    useEffect(() => {
+        if (editingFarm) {
+            setForm({
+                nombre: editingFarm.nombre || "",
+                departamento: editingFarm.departamento || "",
+                municipio: editingFarm.municipio || "",
+                vereda: editingFarm.vereda || "",
+                area_total: editingFarm.area_total ?? "",
+                tipo_suelo: editingFarm.tipo_suelo || "",
+                observaciones: editingFarm.observaciones || "",
+            });
+        } else {
+            setForm(initialForm);
+        }
+    }, [editingFarm]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
         const payload = {
             ...form,
-            caracteristicas: form.caracteristicas ?? "",
+            observaciones: form.observaciones ?? "",
         };
-
         onSave(payload);
-        setForm(initialForm);
+        if (!editingFarm) setForm(initialForm);
     };
 
     return (
         <form className="form" onSubmit={handleSubmit}>
             <div className="section-header">
-                <h2>Registrar finca</h2>
+                <h2>{editingFarm ? "Editar finca" : "Registrar finca"}</h2>
                 <p>Ingresa la información básica de la finca.</p>
             </div>
 
@@ -121,10 +133,10 @@ function FarmForm({ onSave }) {
             </div>
 
             <div className="form-group">
-                <label>Características de la finca</label>
+                <label>Observaciones</label>
                 <textarea
-                    name="caracteristicas"
-                    value={form.caracteristicas}
+                    name="observaciones"
+                    value={form.observaciones}
                     onChange={handleChange}
                     placeholder="Ej: riego, acceso, tamaño, infraestructura"
                     rows={3}
@@ -132,8 +144,13 @@ function FarmForm({ onSave }) {
             </div>
 
             <div className="form-actions">
+                {editingFarm && (
+                    <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>
+                        Cancelar edición
+                    </button>
+                )}
                 <button type="submit" className="btn btn-primary">
-                    Registrar finca
+                    {editingFarm ? "Guardar cambios" : "Registrar finca"}
                 </button>
             </div>
         </form>
