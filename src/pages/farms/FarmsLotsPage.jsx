@@ -17,6 +17,8 @@ function FarmsLotsPage() {
     useEffect(() => {
         async function loadData() {
             try {
+                console.log("Cargando fincas desde:", `${API_URL}/fincas/`);
+
                 // 1. Cargar fincas
                 const resFincas = await fetch(`${API_URL}/fincas/`);
                 if (!resFincas.ok) {
@@ -31,6 +33,7 @@ function FarmsLotsPage() {
                 }
 
                 // 2. Cargar lotes
+                console.log("Cargando lotes desde:", `${API_URL}/lotes/`);
                 const resLotes = await fetch(`${API_URL}/lotes/`);
                 if (!resLotes.ok) {
                     console.error("Error al cargar lotes:", resLotes.status);
@@ -53,10 +56,11 @@ function FarmsLotsPage() {
 
     const filteredLots = useMemo(() => {
         if (selectedFarmId === null) return [];
-        return lots.filter((lot) => lot.finca === selectedFarmId || lot.fincaId === selectedFarmId);
+        return lots.filter(
+            (lot) => lot.finca === selectedFarmId || lot.fincaId === selectedFarmId
+        );
     }, [lots, selectedFarmId]);
 
-    // Crear finca en backend
     const handleAddFarm = async (farmData) => {
         try {
             const res = await fetch(`${API_URL}/fincas/`, {
@@ -81,11 +85,9 @@ function FarmsLotsPage() {
         }
     };
 
-    // Crear o actualizar lote en backend
     const handleSaveLot = async (lotData) => {
         if (!lotData.fincaId && !lotData.finca) return;
 
-        // Asegurar que enviamos el campo correcto para Django (finca = id de la finca)
         const payload = {
             finca: lotData.fincaId || lotData.finca,
             area: lotData.area,
@@ -96,7 +98,6 @@ function FarmsLotsPage() {
 
         try {
             if (editingLot) {
-                // EDITAR lote existente: PUT /lotes/:id/
                 const res = await fetch(`${API_URL}/lotes/${editingLot.id}/`, {
                     method: "PUT",
                     headers: {
@@ -116,7 +117,6 @@ function FarmsLotsPage() {
                 );
                 setEditingLot(null);
             } else {
-                // CREAR lote nuevo: POST /lotes/
                 const res = await fetch(`${API_URL}/lotes/`, {
                     method: "POST",
                     headers: {
@@ -140,7 +140,6 @@ function FarmsLotsPage() {
 
     const handleEditLot = (lot) => {
         setEditingLot(lot);
-        // el backend devuelve 'finca' como id de finca
         setSelectedFarmId(lot.finca || lot.fincaId);
     };
 
