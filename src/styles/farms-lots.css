@@ -136,6 +136,12 @@ textarea {
     color: #4b5563;
 }
 
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -153,7 +159,7 @@ textarea {
 }
 
 .form textarea {
-    resize: vertical;
+    resize: none;
 }
 
 .form-actions {
@@ -169,6 +175,33 @@ textarea {
     padding: 12px 16px;
     cursor: pointer;
     font-weight: 600;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Verde para editar (puedes dejarlo como ya estaba) */
+.btn-link--edit {
+    color: #16a34a; /* verde */
+}
+
+/* Rojo para eliminar */
+.btn-link--delete {
+    color: #dc2626; /* rojo */
+}
+
+/* Opcional: efecto hover */
+.btn-link--edit:hover {
+    color: #166534;
+}
+
+.btn-link--delete:hover {
+    color: #b91c1c;
 }
 
 .btn-primary {

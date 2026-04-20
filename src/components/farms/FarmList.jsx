@@ -1,44 +1,55 @@
-function FarmList({ farms = [], selectedFarmId, onSelect }) {
-    if (farms.length === 0) {
-        return (
-            <div>
-                <div className="section-header">
-                    <h2>Fincas registradas</h2>
-                    <p>Selecciona una finca para gestionar sus lotes.</p>
-                </div>
-
-                <div className="empty-box">
-                    No hay fincas registradas todavía.
-                </div>
-            </div>
-        );
+function FarmList({ farms, selectedFarmId, onSelect, onEdit, onDelete }) {
+    if (!farms || farms.length === 0) {
+        return <div className="empty-box">No hay fincas registradas.</div>;
     }
 
     return (
         <div>
             <div className="section-header">
                 <h2>Fincas registradas</h2>
-                <p>Selecciona una finca para gestionar sus lotes.</p>
+                <p>Selecciona una finca para ver sus lotes.</p>
             </div>
 
-            <div className="farm-list">
+            <ul className="farm-list">
                 {farms.map((farm) => (
-                    <button
+                    <li
                         key={farm.id}
-                        type="button"
                         className={
-                            farm.id === selectedFarmId
-                                ? "farm-item farm-item--active"
-                                : "farm-item"
+                            farm.id === selectedFarmId ? "farm-item farm-item--active" : "farm-item"
                         }
                         onClick={() => onSelect(farm.id)}
                     >
-                        <h3>{farm.nombre}</h3>
-                        <p>{farm.ubicacion}</p>
-                        <span>{farm.caracteristicas}</span>
-                    </button>
+                        {/* Solo nombre */}
+                        <div className="farm-item-main">
+                            <strong>{farm.nombre}</strong>
+                        </div>
+
+                        {/* Botones editar/eliminar */}
+                        <div className="farm-item-actions">
+                            <button
+                                type="button"
+                                className="btn-link btn-link--edit"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(farm);
+                                }}
+                            >
+                                Editar
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-link btn-link--delete"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(farm.id);
+                                }}
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </li>
                 ))}
-            </div>
+            </ul>
         </div>
     );
 }

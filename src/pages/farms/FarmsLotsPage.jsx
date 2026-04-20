@@ -10,42 +10,27 @@ function FarmsLotsPage() {
     const [lots, setLots] = useState([]);
     const [selectedFarmId, setSelectedFarmId] = useState(null);
     const [editingLot, setEditingLot] = useState(null);
+    const [editingFarm, setEditingFarm] = useState(null);
 
     const API_URL = import.meta.env.VITE_API_URL;
 
-    // Cargar fincas y lotes desde el backend al montar el componente
     useEffect(() => {
         async function loadData() {
             try {
-                console.log("Cargando fincas desde:", `${API_URL}/fincas/`);
-
-                // 1. Cargar fincas
                 const resFincas = await fetch(`${API_URL}/fincas/`);
-                if (!resFincas.ok) {
-                    console.error("Error al cargar fincas:", resFincas.status);
-                    return;
-                }
+                if (!resFincas.ok) { console.error("Error al cargar fincas:", resFincas.status); return; }
                 const dataFincas = await resFincas.json();
                 setFarms(dataFincas);
+                if (dataFincas.length > 0) setSelectedFarmId(dataFincas[0].id);
 
-                if (dataFincas.length > 0) {
-                    setSelectedFarmId(dataFincas[0].id);
-                }
-
-                // 2. Cargar lotes
-                console.log("Cargando lotes desde:", `${API_URL}/lotes/`);
                 const resLotes = await fetch(`${API_URL}/lotes/`);
-                if (!resLotes.ok) {
-                    console.error("Error al cargar lotes:", resLotes.status);
-                    return;
-                }
+                if (!resLotes.ok) { console.error("Error al cargar lotes:", resLotes.status); return; }
                 const dataLotes = await resLotes.json();
                 setLots(dataLotes);
             } catch (error) {
                 console.error("Error de red al cargar fincas/lotes:", error);
             }
         }
-
         loadData();
     }, [API_URL]);
 
@@ -56,84 +41,99 @@ function FarmsLotsPage() {
 
     const filteredLots = useMemo(() => {
         if (selectedFarmId === null) return [];
-        return lots.filter(
-            (lot) => lot.finca === selectedFarmId || lot.fincaId === selectedFarmId
-        );
+        return lots.filter((lot) => lot.finca === selectedFarmId);
     }, [lots, selectedFarmId]);
 
+    // ── FINCAS ──────────────────────────────────────────────
     const handleAddFarm = async (farmData) => {
         try {
-            const res = await fetch(`${API_URL}/fincas/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(farmData),
-            });
-
-            if (!res.ok) {
-                console.error("Error al crear finca:", res.status);
-                return;
+            if (editingFarm) {
+                // EDITAR finca existente (PUT)
+                const res = await fetch(`${API_URL}/fincas/${editingFarm.id}/`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(farmData),
+                });
+                const body = await res.clone().text();
+                console.log("PUT /fincas/ STATUS:", res.status, "BODY:", body);
+                if (!res.ok) { console.error("Error al actualizar finca:", res.status); return; }
+                const updatedFarm = await res.json();
+                setFarms((prev) => prev.map((f) => (f.id === updatedFarm.id ? updatedFarm : f)));
+                setEditingFarm(null);
+            } else {
+                // CREAR nueva finca (POST)
+                const res = await fetch(`${API_URL}/fincas/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(farmData),
+                });
+                const body = await res.clone().text();
+                console.log("POST /fincas/ STATUS:", res.status, "BODY:", body);
+                if (!res.ok) { console.error("Error al crear finca:", res.status); return; }
+                const newFarm = await res.json();
+                setFarms((prev) => [...prev, newFarm]);
+                setSelectedFarmId(newFarm.id);
+                setEditingLot(null);
             }
-
-            const newFarm = await res.json();
-            setFarms((prev) => [...prev, newFarm]);
-            setSelectedFarmId(newFarm.id);
-            setEditingLot(null);
         } catch (error) {
-            console.error("Error de red al crear finca:", error);
+            console.error("Error de red al guardar finca:", error);
         }
     };
 
-    // LotForm ya construye el payload con la forma del modelo Lote:
-    // {finca, nombre, area, tipo_suelo, estado, latitud, longitud, observaciones}
+    const handleEditFarm = (farm) => {
+        setEditingFarm(farm);
+        setSelectedFarmId(farm.id);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const handleCancelEditFarm = () => {
+        setEditingFarm(null);
+    };
+
+    const handleDeleteFarm = async (farmId) => {
+        if (!window.confirm("¿Seguro que deseas eliminar esta finca? También se eliminarán sus lotes.")) return;
+        try {
+            const res = await fetch(`${API_URL}/fincas/${farmId}/`, { method: "DELETE" });
+            if (!res.ok) { console.error("Error al eliminar finca:", res.status); return; }
+            setFarms((prev) => prev.filter((f) => f.id !== farmId));
+            setLots((prev) => prev.filter((l) => l.finca !== farmId));
+            setSelectedFarmId((prev) => {
+                const remaining = farms.filter((f) => f.id !== farmId);
+                return remaining.length > 0 ? remaining[0].id : null;
+            });
+            if (editingFarm?.id === farmId) setEditingFarm(null);
+        } catch (error) {
+            console.error("Error de red al eliminar finca:", error);
+        }
+    };
+
+    // ── LOTES ───────────────────────────────────────────────
     const handleSaveLot = async (lotData) => {
         if (!lotData.finca) return;
-
         const payload = lotData;
 
         try {
             if (editingLot) {
                 const res = await fetch(`${API_URL}/lotes/${editingLot.id}/`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
                 });
-
-                const textBody = await res.clone().text();
-                console.log("PUT /lotes/ STATUS:", res.status);
-                console.log("PUT /lotes/ BODY:", textBody);
-
-                if (!res.ok) {
-                    console.error("Error al actualizar lote:", res.status);
-                    return;
-                }
-
+                const body = await res.clone().text();
+                console.log("PUT /lotes/ STATUS:", res.status, "BODY:", body);
+                if (!res.ok) { console.error("Error al actualizar lote:", res.status); return; }
                 const updatedLot = await res.json();
-                setLots((prev) =>
-                    prev.map((lot) => (lot.id === updatedLot.id ? updatedLot : lot))
-                );
+                setLots((prev) => prev.map((l) => (l.id === updatedLot.id ? updatedLot : l)));
                 setEditingLot(null);
             } else {
                 const res = await fetch(`${API_URL}/lotes/`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
                 });
-
-                const textBody = await res.clone().text();
-                console.log("POST /lotes/ STATUS:", res.status);
-                console.log("POST /lotes/ BODY:", textBody);
-
-                if (!res.ok) {
-                    console.error("Error al crear lote:", res.status);
-                    return;
-                }
-
+                const body = await res.clone().text();
+                console.log("POST /lotes/ STATUS:", res.status, "BODY:", body);
+                if (!res.ok) { console.error("Error al crear lote:", res.status); return; }
                 const newLot = await res.json();
                 setLots((prev) => [...prev, newLot]);
             }
@@ -144,12 +144,22 @@ function FarmsLotsPage() {
 
     const handleEditLot = (lot) => {
         setEditingLot(lot);
-        setSelectedFarmId(lot.finca || lot.fincaId);
+        setSelectedFarmId(lot.finca);
     };
 
-    const handleCancelEdit = () => {
-        setEditingLot(null);
+    const handleDeleteLot = async (lotId) => {
+        if (!window.confirm("¿Seguro que deseas eliminar este lote?")) return;
+        try {
+            const res = await fetch(`${API_URL}/lotes/${lotId}/`, { method: "DELETE" });
+            if (!res.ok) { console.error("Error al eliminar lote:", res.status); return; }
+            setLots((prev) => prev.filter((l) => l.id !== lotId));
+            if (editingLot?.id === lotId) setEditingLot(null);
+        } catch (error) {
+            console.error("Error de red al eliminar lote:", error);
+        }
     };
+
+    const handleCancelEdit = () => setEditingLot(null);
 
     return (
         <>
@@ -162,7 +172,11 @@ function FarmsLotsPage() {
 
             <section className="fl-grid fl-grid--top">
                 <div className="fl-card">
-                    <FarmForm onSave={handleAddFarm} />
+                    <FarmForm
+                        onSave={handleAddFarm}
+                        editingFarm={editingFarm}
+                        onCancelEdit={handleCancelEditFarm}
+                    />
                 </div>
 
                 <div className="fl-card">
@@ -170,6 +184,8 @@ function FarmsLotsPage() {
                         farms={farms}
                         selectedFarmId={selectedFarmId}
                         onSelect={setSelectedFarmId}
+                        onEdit={handleEditFarm}
+                        onDelete={handleDeleteFarm}
                     />
                 </div>
             </section>
@@ -183,32 +199,16 @@ function FarmsLotsPage() {
 
                     {selectedFarm ? (
                         <div className="farm-summary">
-                            <h3>Finca seleccionada</h3>
-                            <p>
-                                <strong>Nombre:</strong> {selectedFarm.nombre}
-                            </p>
-                            <p>
-                                <strong>Ubicación:</strong>{" "}
-                                {selectedFarm.departamento}, {selectedFarm.municipio}, vereda{" "}
-                                {selectedFarm.vereda}
-                            </p>
-                            <p>
-                                <strong>Área total:</strong> {selectedFarm.area_total} ha
-                            </p>
-                            <p>
-                                <strong>Tipo de suelo:</strong> {selectedFarm.tipo_suelo}
-                            </p>
-                            {selectedFarm.caracteristicas && (
-                                <p>
-                                    <strong>Características:</strong>{" "}
-                                    {selectedFarm.caracteristicas}
-                                </p>
+                            <p><strong>Nombre:</strong> {selectedFarm.nombre}</p>
+                            <p><strong>Ubicación:</strong> {selectedFarm.departamento}, {selectedFarm.municipio}, vereda {selectedFarm.vereda}</p>
+                            <p><strong>Área total:</strong> {selectedFarm.area_total} ha</p>
+                            <p><strong>Tipo de suelo:</strong> {selectedFarm.tipo_suelo}</p>
+                            {selectedFarm.observaciones && (
+                                <p><strong>Observaciones:</strong> {selectedFarm.observaciones}</p>
                             )}
                         </div>
                     ) : (
-                        <div className="empty-box">
-                            Primero registra o selecciona una finca.
-                        </div>
+                        <div className="empty-box">Primero registra o selecciona una finca.</div>
                     )}
                 </div>
 
@@ -228,6 +228,7 @@ function FarmsLotsPage() {
                     lots={filteredLots}
                     selectedFarm={selectedFarm}
                     onEdit={handleEditLot}
+                    onDelete={handleDeleteLot}
                 />
             </section>
         </>
