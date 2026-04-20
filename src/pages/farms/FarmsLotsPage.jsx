@@ -85,16 +85,12 @@ function FarmsLotsPage() {
         }
     };
 
+    // LotForm ya construye el payload con la forma del modelo Lote:
+    // {finca, nombre, area, tipo_suelo, estado, latitud, longitud, observaciones}
     const handleSaveLot = async (lotData) => {
-        if (!lotData.fincaId && !lotData.finca) return;
+        if (!lotData.finca) return;
 
-        const payload = {
-            finca: lotData.fincaId || lotData.finca,
-            area: lotData.area,
-            ubicacion: lotData.ubicacion,
-            tipo_suelo: lotData.tipoSuelo,
-            estado: lotData.estado,
-        };
+        const payload = lotData;
 
         try {
             if (editingLot) {
@@ -105,6 +101,10 @@ function FarmsLotsPage() {
                     },
                     body: JSON.stringify(payload),
                 });
+
+                const textBody = await res.clone().text();
+                console.log("PUT /lotes/ STATUS:", res.status);
+                console.log("PUT /lotes/ BODY:", textBody);
 
                 if (!res.ok) {
                     console.error("Error al actualizar lote:", res.status);
@@ -124,6 +124,10 @@ function FarmsLotsPage() {
                     },
                     body: JSON.stringify(payload),
                 });
+
+                const textBody = await res.clone().text();
+                console.log("POST /lotes/ STATUS:", res.status);
+                console.log("POST /lotes/ BODY:", textBody);
 
                 if (!res.ok) {
                     console.error("Error al crear lote:", res.status);
@@ -179,13 +183,27 @@ function FarmsLotsPage() {
 
                     {selectedFarm ? (
                         <div className="farm-summary">
-                            <h3>{selectedFarm.nombre}</h3>
+                            <h3>Finca seleccionada</h3>
                             <p>
-                                <strong>Ubicación:</strong> {selectedFarm.ubicacion}
+                                <strong>Nombre:</strong> {selectedFarm.nombre}
                             </p>
                             <p>
-                                <strong>Características:</strong> {selectedFarm.caracteristicas}
+                                <strong>Ubicación:</strong>{" "}
+                                {selectedFarm.departamento}, {selectedFarm.municipio}, vereda{" "}
+                                {selectedFarm.vereda}
                             </p>
+                            <p>
+                                <strong>Área total:</strong> {selectedFarm.area_total} ha
+                            </p>
+                            <p>
+                                <strong>Tipo de suelo:</strong> {selectedFarm.tipo_suelo}
+                            </p>
+                            {selectedFarm.caracteristicas && (
+                                <p>
+                                    <strong>Características:</strong>{" "}
+                                    {selectedFarm.caracteristicas}
+                                </p>
+                            )}
                         </div>
                     ) : (
                         <div className="empty-box">
