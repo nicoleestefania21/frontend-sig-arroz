@@ -1,13 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useEffect, useState } from "react";
 import "../../styles/home.css";
 
 const modules = [
     {
         title: "Fincas y lotes",
-        description:
-            "Registra y administra fincas, asocia lotes con área, tipo de suelo y estado.",
+        description: "Registra y administra fincas, asocia lotes con área, tipo de suelo y estado.",
         icon: "🌾",
         path: "/fincas-lotes",
         color: "card-green",
@@ -21,55 +19,15 @@ const modules = [
     },
 ];
 
+const stats = [
+    { label: "Fincas registradas", value: 2, icon: "🏡" },
+    { label: "Lotes activos", value: 3, icon: "📐" },
+    { label: "Usuarios del sistema", value: 4, icon: "👤" },
+];
+
 function HomePage() {
     const navigate = useNavigate();
     const { user } = useAuth();
-
-    const [farms, setFarms] = useState([]);
-    const [lots, setLots] = useState([]);
-    // Si luego quieres que el número de usuarios sea dinámico, descomenta:
-    // const [users, setUsers] = useState([]);
-
-    const API_URL = import.meta.env.VITE_API_URL;
-
-    useEffect(() => {
-        async function loadData() {
-            try {
-                // Fincas
-                const resFincas = await fetch(`${API_URL}/fincas/`);
-                if (resFincas.ok) {
-                    const dataFincas = await resFincas.json();
-                    setFarms(dataFincas);
-                } else {
-                    console.error("Error al cargar fincas en Home:", resFincas.status);
-                }
-
-                // Lotes
-                const resLotes = await fetch(`${API_URL}/lotes/`);
-                if (resLotes.ok) {
-                    const dataLotes = await resLotes.json();
-                    setLots(dataLotes);
-                } else {
-                    console.error("Error al cargar lotes en Home:", resLotes.status);
-                }
-
-                // Usuarios (dejado como ejemplo, depende de tu endpoint)
-                /*
-                const resUsuarios = await fetch(`${API_URL}/usuarios/`);
-                if (resUsuarios.ok) {
-                  const dataUsuarios = await resUsuarios.json();
-                  setUsers(dataUsuarios);
-                } else {
-                  console.error("Error al cargar usuarios en Home:", resUsuarios.status);
-                }
-                */
-            } catch (error) {
-                console.error("Error de red al cargar estadísticas del inicio:", error);
-            }
-        }
-
-        loadData();
-    }, [API_URL]);
 
     const today = new Date().toLocaleDateString("es-CO", {
         weekday: "long",
@@ -77,26 +35,6 @@ function HomePage() {
         month: "long",
         day: "numeric",
     });
-
-    const stats = [
-        {
-            label: "Fincas registradas",
-            value: farms.length,
-            icon: "🏡",
-        },
-        {
-            label: "Lotes activos",
-            value: lots.length,
-            icon: "📐",
-        },
-        // Si activas el estado de usuarios, puedes usar:
-        // { label: "Usuarios del sistema", value: users.length, icon: "👤" },
-        {
-            label: "Usuarios del sistema",
-            value: 4, // por ahora un valor fijo
-            icon: "👤",
-        },
-    ];
 
     return (
         <div className="home">
