@@ -8,11 +8,16 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import "./styles/app-layout.css";
 
 function ProtectedLayout() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
 
   return (
     <div className="app-shell">
