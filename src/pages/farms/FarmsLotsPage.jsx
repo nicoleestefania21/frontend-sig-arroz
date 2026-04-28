@@ -4,6 +4,7 @@ import FarmList from "../../components/farms/FarmList";
 import LotForm from "../../components/lots/LotForm";
 import LotTable from "../../components/lots/LotTable";
 import "../../styles/farms-lots.css";
+import { API } from "../../config/api";
 
 function FarmsLotsPage() {
   const [farms, setFarms] = useState([]);
@@ -12,14 +13,11 @@ function FarmsLotsPage() {
   const [editingLot, setEditingLot] = useState(null);
   const [editingFarm, setEditingFarm] = useState(null);
 
-  const API_BASE =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
-
   // ── CARGA INICIAL ────────────────────────────────────────
   useEffect(() => {
     async function loadData() {
       try {
-        const resFincas = await fetch(`${API_BASE}/fincas/`);
+        const resFincas = await fetch(`${API.fincas}/`);
         if (!resFincas.ok) {
           console.error("Error al cargar fincas:", resFincas.status);
           return;
@@ -28,7 +26,7 @@ function FarmsLotsPage() {
         setFarms(dataFincas);
         if (dataFincas.length > 0) setSelectedFarmId(dataFincas[0].id);
 
-        const resLotes = await fetch(`${API_BASE}/lotes/`);
+        const resLotes = await fetch(`${API.lotes}/`);
         if (!resLotes.ok) {
           console.error("Error al cargar lotes:", resLotes.status);
           return;
@@ -40,7 +38,7 @@ function FarmsLotsPage() {
       }
     }
     loadData();
-  }, [API_BASE]);
+  }, []);
 
   // ── MEMOS ────────────────────────────────────────────────
   const selectedFarm = useMemo(() => {
@@ -57,7 +55,7 @@ function FarmsLotsPage() {
   const handleAddFarm = async (farmData) => {
     try {
       if (editingFarm) {
-        const res = await fetch(`${API_BASE}/fincas/${editingFarm.id}/`, {
+        const res = await fetch(`${API.fincas}/${editingFarm.id}/`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(farmData),
@@ -72,7 +70,7 @@ function FarmsLotsPage() {
         );
         setEditingFarm(null);
       } else {
-        const res = await fetch(`${API_BASE}/fincas/`, {
+        const res = await fetch(`${API.fincas}/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(farmData),
@@ -109,7 +107,7 @@ function FarmsLotsPage() {
     )
       return;
     try {
-      const res = await fetch(`${API_BASE}/fincas/${farmId}/`, {
+      const res = await fetch(`${API.fincas}/${farmId}/`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -134,7 +132,7 @@ function FarmsLotsPage() {
 
     try {
       if (editingLot) {
-        const res = await fetch(`${API_BASE}/lotes/${editingLot.id}/`, {
+        const res = await fetch(`${API.lotes}/${editingLot.id}/`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(lotData),
@@ -149,7 +147,7 @@ function FarmsLotsPage() {
         );
         setEditingLot(null);
       } else {
-        const res = await fetch(`${API_BASE}/lotes/`, {
+        const res = await fetch(`${API.lotes}/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(lotData),
@@ -174,7 +172,7 @@ function FarmsLotsPage() {
   const handleDeleteLot = async (lotId) => {
     if (!window.confirm("¿Seguro que deseas eliminar este lote?")) return;
     try {
-      const res = await fetch(`${API_BASE}/lotes/${lotId}/`, {
+      const res = await fetch(`${API.lotes}/${lotId}/`, {
         method: "DELETE",
       });
       if (!res.ok) {
