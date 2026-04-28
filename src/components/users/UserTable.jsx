@@ -1,71 +1,98 @@
-// src/components/users/UserTable.jsx
-function UserTable({ users, onEdit }) {
+function getRoleLabel(role) {
+  const roleLabels = {
+    ADMIN: "Administrador",
+    TECNICO: "Técnico",
+    PRODUCTOR: "Productor",
+    OPERADOR: "Operador",
+  };
+
+  return roleLabels[role] || role || "Sin rol";
+}
+
+function getStatusInfo(estado) {
+  const normalized = (estado || "").toString().trim().toUpperCase();
+
+  if (normalized === "ACTIVO") {
+    return {
+      label: "ACTIVO",
+      className: "badge badge-success",
+    };
+  }
+
+  return {
+    label: "INACTIVO",
+    className: "badge badge-muted",
+  };
+}
+
+function UserTable({ users = [], onEdit, onDelete, currentUserId }) {
   return (
     <div>
       <div className="section-header">
         <h2>Usuarios registrados</h2>
-        <p>Consulta y administra los accesos creados.</p>
+        <p>
+          Consulta y administra los accesos creados.{" "}
+          {users.length === 0
+            ? "No hay usuarios registrados."
+            : `${users.length} usuario${users.length !== 1 ? "s" : ""} registrado${users.length !== 1 ? "s" : ""}.`}
+        </p>
       </div>
 
       {users.length === 0 ? (
-        <p>No hay usuarios registrados.</p>
+        <div className="empty-box">No hay usuarios registrados todavía.</div>
       ) : (
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Correo</th>
-              <th>Rol</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => {
-              const nombreCompleto = `${u.first_name || ""} ${
-                u.last_name || ""
-              }`.trim();
+        <div className="table-wrapper">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => {
+                const nombreCompleto = `${u.first_name || ""} ${u.last_name || ""}`.trim();
+                const displayName = nombreCompleto || u.username || "(sin nombre)";
+                const displayEmail = u.email || "(sin correo)";
+                const displayRole = getRoleLabel(u.role);
+                const status = getStatusInfo(u.estado);
 
-              const displayName = nombreCompleto || u.username || "(sin nombre)";
-              const displayEmail = u.email || "(sin correo)";
+                return (
+                  <tr key={u.id}>
+                    <td>{displayName}</td>
+                    <td>{displayEmail}</td>
+                    <td>{displayRole}</td>
+                    <td>
+                      <span className={status.className}>{status.label}</span>
+                    </td>
+                    <td className="users-actions">
+                      <button
+                        type="button"
+                        className="btn-link"
+                        onClick={() => onEdit(u)}
+                      >
+                        Editar
+                      </button>
 
-              const roleLabels = {
-                ADMIN: "Administrador",
-                TECNICO: "Técnico",
-                PRODUCTOR: "Productor",
-                OPERADOR: "Operador",
-              };
-              const displayRole = roleLabels[u.role] || u.role || "";
-
-              const displayEstado =
-                u.estado === "ACTIVO" || u.estado === "Activo"
-                  ? "ACTIVO"
-                  : "INACTIVO";
-
-              return (
-                <tr key={u.id}>
-                  <td>{displayName}</td>
-                  <td>{displayEmail}</td>
-                  <td>{displayRole}</td>
-                  <td>
-                    <span className="badge badge--status">
-                      {displayEstado}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => onEdit(u)}
-                    >
-                      Editar
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                      {u.id !== currentUserId && (
+                        <button
+                          type="button"
+                          className="btn-link btn-link-danger"
+                          onClick={() => onDelete(u)}
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

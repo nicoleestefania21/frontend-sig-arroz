@@ -7,6 +7,17 @@ import RolePermissions from "../../components/users/RolePermissions";
 import "../../styles/users.css";
 import { API } from "../../config/api";
 
+// Helper para evitar romper el frontend cuando el backend responde HTML en vez de JSON
+async function parseResponse(res) {
+  const contentType = res.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return await res.json();
+  }
+
+  return await res.text();
+}
+
 function UsersPage() {
   const { authFetch, user: currentUser, isAdmin } = useAuth();
 
@@ -32,19 +43,26 @@ function UsersPage() {
     );
   }
 
-  // ── Cargar usuarios desde el backend ─────────────────────
+  // Cargar usuarios desde el backend
   useEffect(() => {
     async function loadUsers() {
       try {
         setLoading(true);
-        const res = await authFetch(`${API.users}/list/`, { method: "GET" });
+        setError("");
+
+        const res = await authFetch(`${API.users}/list/`, {
+          method: "GET",
+        });
+
+        const data = await parseResponse(res);
+
         if (!res.ok) {
-          console.error("Error al cargar usuarios:", res.status);
+          console.error("Error al cargar usuarios:", data);
           setError("No se pudieron cargar los usuarios.");
           return;
         }
-        const data = await res.json();
-        setUsers(data);
+
+        setUsers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error de red al cargar usuarios:", err);
         setError("Error de conexión al cargar usuarios.");
@@ -52,20 +70,20 @@ function UsersPage() {
         setLoading(false);
       }
     }
+
     loadUsers();
   }, [authFetch]);
 
-  // ── Búsqueda ─────────────────────────────────────────────
+  // Búsqueda
   const filteredUsers = useMemo(() => {
     return users.filter((user) =>
-      `${user.first_name || ""} ${user.last_name || ""} ${user.username
-        } ${user.email || ""} ${user.role} ${user.estado}`
+      `${user.first_name || ""} ${user.last_name || ""} ${user.username || ""} ${user.email || ""} ${user.role || ""} ${user.estado || ""}`
         .toLowerCase()
         .includes(search.toLowerCase())
     );
   }, [users, search]);
 
-  // ── Guardar / actualizar usuario ─────────────────────────
+  // Guardar / actualizar usuario
   const handleSaveUser = async (formData) => {
     setError("");
     setSuccess("");
@@ -73,9 +91,9 @@ function UsersPage() {
 
     try {
       if (editingUser) {
-        // EDITAR usuario existente
+        // EDITAR
         const payload = {
-          username: editingUser.username, // no dejamos cambiar username
+          username: editingUser.username,
           first_name: formData.nombre.split(" ")[0] || "",
           last_name: formData.nombre.split(" ").slice(1).join(" ") || "",
           email: formData.correo,
@@ -83,19 +101,27 @@ function UsersPage() {
           estado: formData.estado === "Activo" ? "ACTIVO" : "INACTIVO",
         };
 
+        if (formData.password && formData.password.trim() !== "") {
+          payload.password = formData.password;
+        }
+
         const res = await authFetch(`${API.users}/${editingUser.id}/`, {
-          method: "PUT",
+          method: "PATCH",
           body: JSON.stringify(payload),
         });
-        const data = await res.json();
+
+        const data = await parseResponse(res);
 
         if (!res.ok) {
+          console.error("Error al actualizar usuario:", data);
           setError(
-            data.detail ||
-            data.message ||
-            "Error al actualizar usuario. Revisa los datos."
+            typeof data === "string"
+              ? "No se pudo actualizar el usuario. El servidor devolvió una respuesta no válida."
+              : data.detail ||
+              data.message ||
+              JSON.stringify(data) ||
+              "Error al actualizar usuario."
           );
-          setLoading(false);
           return;
         }
 
@@ -103,9 +129,10 @@ function UsersPage() {
           prev.map((u) => (u.id === editingUser.id ? data : u))
         );
         setEditingUser(null);
+        setSelectedRole("ADMIN");
         setSuccess("Usuario actualizado correctamente.");
       } else {
-        // CREAR usuario nuevo
+        // CREAR
         const payload = {
           username: formData.username,
           password: formData.password,
@@ -120,26 +147,31 @@ function UsersPage() {
           method: "POST",
           body: JSON.stringify(payload),
         });
-        const data = await res.json();
+
+        const data = await parseResponse(res);
 
         if (!res.ok) {
-          const msg =
-            data.message ||
-            data.detail ||
-            JSON.stringify(data) ||
-            "Error al registrar usuario.";
-          setError(msg);
-          setLoading(false);
+          console.error("Error al registrar usuario:", data);
+          setError(
+            typeof data === "string"
+              ? "No se pudo registrar el usuario. El servidor devolvió una respuesta no válida."
+              : data.message ||
+              data.detail ||
+              JSON.stringify(data) ||
+              "Error al registrar usuario."
+          );
           return;
         }
 
-        // Vuelve a cargar la lista
+        // Recargar la lista completa
         const resList = await authFetch(`${API.users}/list/`, {
           method: "GET",
         });
-        if (resList.ok) {
-          const list = await resList.json();
-          setUsers(list);
+
+        const listData = await parseResponse(resList);
+
+        if (resList.ok && Array.isArray(listData)) {
+          setUsers(listData);
         }
 
         setSuccess("Usuario creado correctamente.");
@@ -154,13 +186,69 @@ function UsersPage() {
 
   const handleEditUser = (user) => {
     setEditingUser(user);
-
-    const rolFront = mapRolBackToFront(user.role);
-    setSelectedRole(rolFront);
+    setSelectedRole(mapRolBackToFront(user.role));
+    setError("");
+    setSuccess("");
   };
 
   const handleCancelEdit = () => {
     setEditingUser(null);
+    setSelectedRole("ADMIN");
+    setError("");
+    setSuccess("");
+  };
+
+  // Eliminar usuario
+  const handleDeleteUser = async (userToDelete) => {
+    setError("");
+    setSuccess("");
+
+    if (userToDelete.id === currentUser?.id) {
+      setError("No puedes eliminar tu propio usuario.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Deseas eliminar al usuario ${userToDelete.first_name || userToDelete.username}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+
+      const res = await authFetch(`${API.users}/${userToDelete.id}/`, {
+        method: "DELETE",
+      });
+
+      const data = await parseResponse(res);
+
+      if (!res.ok) {
+        console.error("Error al eliminar usuario:", data);
+        setError(
+          typeof data === "string"
+            ? "No se pudo eliminar el usuario. El servidor devolvió una respuesta no válida."
+            : data.detail ||
+            data.message ||
+            "No se pudo eliminar el usuario."
+        );
+        return;
+      }
+
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+
+      if (editingUser?.id === userToDelete.id) {
+        setEditingUser(null);
+        setSelectedRole("ADMIN");
+      }
+
+      setSuccess("Usuario eliminado correctamente.");
+    } catch (err) {
+      console.error("Error al eliminar usuario:", err);
+      setError("Error de conexión al eliminar usuario.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -189,9 +277,11 @@ function UsersPage() {
             onRoleChange={setSelectedRole}
             loading={loading}
           />
+
           {error && (
             <div className="users-alert users-alert--error">{error}</div>
           )}
+
           {success && (
             <div className="users-alert users-alert--success">{success}</div>
           )}
@@ -206,7 +296,12 @@ function UsersPage() {
         {loading && users.length === 0 ? (
           <p>Cargando usuarios...</p>
         ) : (
-          <UserTable users={filteredUsers} onEdit={setEditingUser} />
+          <UserTable
+            users={filteredUsers}
+            onEdit={handleEditUser}
+            onDelete={handleDeleteUser}
+            currentUserId={currentUser?.id}
+          />
         )}
       </section>
     </>
