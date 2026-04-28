@@ -1,29 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const initialForm = {
     nombre: "",
-    departamento: "",
-    municipio: "",
-    vereda: "",
-    area_total: "",
-    tipo_suelo: "",
-    observaciones: "",
+    ubicacion: "",
+    caracteristicas: "",
 };
 
 function FarmForm({ onSave, editingFarm, onCancelEdit }) {
     const [form, setForm] = useState(initialForm);
 
-    // Rellenar el formulario cuando se va a editar una finca
     useEffect(() => {
         if (editingFarm) {
             setForm({
-                nombre: editingFarm.nombre || "",
-                departamento: editingFarm.departamento || "",
-                municipio: editingFarm.municipio || "",
-                vereda: editingFarm.vereda || "",
-                area_total: editingFarm.area_total ?? "",
-                tipo_suelo: editingFarm.tipo_suelo || "",
-                observaciones: editingFarm.observaciones || "",
+                nombre: editingFarm.nombre ?? "",
+                ubicacion: editingFarm.ubicacion ?? "",
+                caracteristicas: editingFarm.caracteristicas ?? "",
             });
         } else {
             setForm(initialForm);
@@ -37,118 +28,74 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const payload = {
-            ...form,
-            observaciones: form.observaciones ?? "",
-        };
-        onSave(payload);
-        if (!editingFarm) setForm(initialForm);
+
+        onSave({
+            nombre: form.nombre.trim(),
+            ubicacion: form.ubicacion.trim(),
+            caracteristicas: form.caracteristicas.trim(),
+        });
+
+        if (!editingFarm) {
+            setForm(initialForm);
+        }
     };
 
     return (
         <form className="form" onSubmit={handleSubmit}>
             <div className="section-header">
-                <h2>{editingFarm ? "Editar finca" : "Registrar finca"}</h2>
-                <p>Ingresa la información básica de la finca.</p>
+                <h2>{editingFarm ? "Editar finca" : "Registrar nueva finca"}</h2>
+                <p>Agrega nombre, ubicación y características principales.</p>
             </div>
 
             <div className="form-group">
-                <label>Nombre de la finca</label>
+                <label htmlFor="nombre">Nombre de la finca</label>
                 <input
-                    type="text"
+                    id="nombre"
                     name="nombre"
+                    type="text"
                     value={form.nombre}
                     onChange={handleChange}
-                    placeholder="Ej: Finca El Mirador"
+                    placeholder="Ej: Finca El Porvenir"
                     required
                 />
             </div>
 
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Departamento</label>
-                    <input
-                        type="text"
-                        name="departamento"
-                        value={form.departamento}
-                        onChange={handleChange}
-                        placeholder="Ej: Norte de Santander"
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Municipio</label>
-                    <input
-                        type="text"
-                        name="municipio"
-                        value={form.municipio}
-                        onChange={handleChange}
-                        placeholder="Ej: Cúcuta"
-                        required
-                    />
-                </div>
-            </div>
-
             <div className="form-group">
-                <label>Vereda o sector</label>
+                <label htmlFor="ubicacion">Ubicación</label>
                 <input
+                    id="ubicacion"
+                    name="ubicacion"
                     type="text"
-                    name="vereda"
-                    value={form.vereda}
+                    value={form.ubicacion}
                     onChange={handleChange}
-                    placeholder="Ej: La Floresta"
+                    placeholder="Ej: Vereda El Descanso"
                     required
                 />
             </div>
 
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Área total (ha)</label>
-                    <input
-                        type="number"
-                        name="area_total"
-                        value={form.area_total}
-                        onChange={handleChange}
-                        min="0"
-                        step="0.01"
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Tipo de suelo</label>
-                    <select
-                        name="tipo_suelo"
-                        value={form.tipo_suelo}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Selecciona una opción</option>
-                        <option value="franco">Franco</option>
-                        <option value="arcilloso">Arcilloso</option>
-                        <option value="arenoso">Arenoso</option>
-                        <option value="franco-arenoso">Franco-arenoso</option>
-                        <option value="franco-arcilloso">Franco-arcilloso</option>
-                    </select>
-                </div>
-            </div>
-
             <div className="form-group">
-                <label>Observaciones</label>
+                <label htmlFor="caracteristicas">Características</label>
                 <textarea
-                    name="observaciones"
-                    value={form.observaciones}
-                    onChange={handleChange}
-                    placeholder="Ej: riego, acceso, tamaño, infraestructura"
+                    id="caracteristicas"
+                    name="caracteristicas"
                     rows={3}
+                    value={form.caracteristicas}
+                    onChange={handleChange}
+                    placeholder="Describe tamaño, acceso, riego, relieve..."
                 />
             </div>
 
             <div className="form-actions">
                 {editingFarm && (
-                    <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={onCancelEdit}
+                    >
                         Cancelar edición
                     </button>
                 )}
+
                 <button type="submit" className="btn btn-primary">
                     {editingFarm ? "Guardar cambios" : "Registrar finca"}
                 </button>
