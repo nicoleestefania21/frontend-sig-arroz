@@ -124,20 +124,52 @@ export function AuthProvider({ children }) {
   const authFetch = useCallback(
     async (url, options = {}) => {
       let access = localStorage.getItem("access_token");
+
+      // Si no hay token, hace fetch normal (sin Authorization)
+      if (!access) {
+        const headers = {
+          ...(options.headers || {}),
+        };
+        if (
+          !headers["Content-Type"] &&
+          !(options.body instanceof FormData)
+        ) {
+          headers["Content-Type"] = "application/json";
+        }
+        return fetch(url, {
+          ...options,
+          headers,
+        });
+      }
+
       const payload = parseJwt(access);
+
+      // Si el token está por expirar, intenta renovarlo
       if (payload && payload.exp * 1000 - Date.now() < 60_000) {
         access = await refreshAccessToken();
       }
+
+      const headers = {
+        ...(options.headers || {}),
+      };
+
+      if (
+        !headers["Content-Type"] &&
+        !(options.body instanceof FormData)
+      ) {
+        headers["Content-Type"] = "application/json";
+      }
+
+      if (access) {
+        headers.Authorization = `Bearer ${access}`;
+      }
+
       return fetch(url, {
         ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access}`,
-          ...(options.headers || {}),
-        },
+        headers,
       });
     },
-    [] // refreshAccessToken está definido en el mismo closure
+    [] // refreshAccessToken está en el mismo cierre
   );
 
   const value = useMemo(
