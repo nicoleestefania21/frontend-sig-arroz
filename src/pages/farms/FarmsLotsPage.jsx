@@ -67,7 +67,8 @@ function FarmsLotsPage() {
         });
 
         if (!res.ok) {
-          console.error("Error al editar finca:", res.status);
+          const errorData = await res.json();
+          console.error("Error al editar finca:", res.status, errorData);
           return;
         }
 
@@ -84,7 +85,8 @@ function FarmsLotsPage() {
         });
 
         if (!res.ok) {
-          console.error("Error al crear finca:", res.status);
+          const errorData = await res.json();
+          console.error("Error al crear finca:", res.status, errorData);
           return;
         }
 
@@ -247,8 +249,12 @@ function FarmsLotsPage() {
           {selectedFarm ? (
             <div className="farm-detail">
               <strong>{selectedFarm.nombre}</strong>
-              <p>Ubicación: {selectedFarm.ubicacion}</p>
-              <p>Características: {selectedFarm.caracteristicas}</p>
+              <p>Departamento: {selectedFarm.departamento}</p>
+              <p>Municipio: {selectedFarm.municipio}</p>
+              <p>Vereda: {selectedFarm.vereda}</p>
+              <p>Área total: {selectedFarm.area_total ?? selectedFarm.areatotal} ha</p>
+              <p>Tipo de suelo: {selectedFarm.tipo_suelo ?? selectedFarm.tiposuelo}</p>
+              <p>Observaciones: {selectedFarm.observaciones || "Sin observaciones"}</p>
             </div>
           ) : (
             <p className="text-muted">

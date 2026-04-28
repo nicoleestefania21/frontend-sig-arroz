@@ -5,8 +5,8 @@ const initialForm = {
     departamento: "",
     municipio: "",
     vereda: "",
-    areatotal: "",
-    tiposuelo: "",
+    area_total: "",
+    tipo_suelo: "",
     observaciones: "",
 };
 
@@ -20,11 +20,14 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
                 departamento: editingFarm.departamento ?? "",
                 municipio: editingFarm.municipio ?? "",
                 vereda: editingFarm.vereda ?? "",
-                areatotal:
-                    editingFarm.areatotal === null || editingFarm.areatotal === undefined
-                        ? ""
-                        : editingFarm.areatotal,
-                tiposuelo: editingFarm.tiposuelo ?? "",
+                area_total:
+                    editingFarm.area_total ??
+                    editingFarm.areatotal ??
+                    "",
+                tipo_suelo:
+                    editingFarm.tipo_suelo ??
+                    editingFarm.tiposuelo ??
+                    "",
                 observaciones: editingFarm.observaciones ?? "",
             });
         } else {
@@ -36,7 +39,7 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
         const { name, value } = e.target;
         setForm((prev) => ({
             ...prev,
-            [name]: name === "areatotal" ? value : value,
+            [name]: value,
         }));
     };
 
@@ -48,8 +51,8 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
             departamento: form.departamento.trim(),
             municipio: form.municipio.trim(),
             vereda: form.vereda.trim(),
-            areatotal: Number(form.areatotal),
-            tiposuelo: form.tiposuelo.trim(),
+            area_total: Number(form.area_total),
+            tipo_suelo: form.tipo_suelo.trim(),
             observaciones: form.observaciones.trim(),
         });
 
@@ -73,7 +76,6 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
                     type="text"
                     value={form.nombre}
                     onChange={handleChange}
-                    placeholder="Ej: Finca El Porvenir"
                     required
                 />
             </div>
@@ -87,7 +89,6 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
                         type="text"
                         value={form.departamento}
                         onChange={handleChange}
-                        placeholder="Ej: Norte de Santander"
                         required
                     />
                 </div>
@@ -100,7 +101,6 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
                         type="text"
                         value={form.municipio}
                         onChange={handleChange}
-                        placeholder="Ej: Cúcuta"
                         required
                     />
                 </div>
@@ -115,36 +115,33 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
                         type="text"
                         value={form.vereda}
                         onChange={handleChange}
-                        placeholder="Ej: Vereda El Descanso"
                         required
                     />
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="areatotal">Área total (ha)</label>
+                    <label htmlFor="area_total">Área total</label>
                     <input
-                        id="areatotal"
-                        name="areatotal"
+                        id="area_total"
+                        name="area_total"
                         type="number"
                         min="0.01"
                         step="0.01"
-                        value={form.areatotal}
+                        value={form.area_total}
                         onChange={handleChange}
-                        placeholder="Ej: 12.5"
                         required
                     />
                 </div>
             </div>
 
             <div className="form-group">
-                <label htmlFor="tiposuelo">Tipo de suelo</label>
+                <label htmlFor="tipo_suelo">Tipo de suelo</label>
                 <input
-                    id="tiposuelo"
-                    name="tiposuelo"
+                    id="tipo_suelo"
+                    name="tipo_suelo"
                     type="text"
-                    value={form.tiposuelo}
+                    value={form.tipo_suelo}
                     onChange={handleChange}
-                    placeholder="Ej: Franco-arcilloso"
                     required
                 />
             </div>
@@ -157,7 +154,6 @@ function FarmForm({ onSave, editingFarm, onCancelEdit }) {
                     rows={3}
                     value={form.observaciones}
                     onChange={handleChange}
-                    placeholder="Notas adicionales sobre la finca"
                 />
             </div>
 
