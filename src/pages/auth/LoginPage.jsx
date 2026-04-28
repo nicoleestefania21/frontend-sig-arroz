@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/login.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/users";
+import { API } from "../../config/api";   // ← cambia esto
 
 function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -13,10 +12,9 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Estado para el modal de recuperación
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-  const [resetStatus, setResetStatus] = useState(""); // "loading" | "sent" | "error"
+  const [resetStatus, setResetStatus] = useState("");
   const [resetMsg, setResetMsg] = useState("");
 
   useEffect(() => {
@@ -43,14 +41,14 @@ function LoginPage() {
     navigate("/fincas-lotes", { replace: true });
   };
 
-  // Recuperación de contraseña
+  // Recuperación de contraseña — ahora usa API.users
   const handleResetSubmit = async (e) => {
     e.preventDefault();
     setResetStatus("loading");
     setResetMsg("");
 
     try {
-      const res = await fetch(`${API_URL}/password-reset/`, {
+      const res = await fetch(`${API.users}/password-reset/`, {   // ← corregido
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: resetEmail }),
@@ -108,7 +106,6 @@ function LoginPage() {
             />
           </div>
 
-          {/* Enlace de recuperación */}
           <div className="login-forgot">
             <button
               type="button"
@@ -125,7 +122,6 @@ function LoginPage() {
         </form>
       </div>
 
-      {/* Modal: recuperar contraseña */}
       {showReset && (
         <div className="modal-overlay" onClick={() => setShowReset(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
