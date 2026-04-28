@@ -1,8 +1,17 @@
-import { createContext, useContext, useMemo, useState, useEffect, useCallback } from "react";
+// src/context/AuthContext.jsx
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { API } from "../config/api";
 
 const AuthContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/users";
+const API_URL = API.users; // base: /api/users
 
 function parseJwt(token) {
   try {
@@ -90,7 +99,9 @@ export function AuthProvider({ children }) {
       if (!res.ok) {
         return {
           ok: false,
-          message: data.detail || "Credenciales inválidas. Verifica tu usuario y contraseña.",
+          message:
+            data.detail ||
+            "Credenciales inválidas. Verifica tu usuario y contraseña.",
         };
       }
       localStorage.setItem("access_token", data.access);
@@ -98,7 +109,10 @@ export function AuthProvider({ children }) {
       await fetchMe(data.access);
       return { ok: true };
     } catch {
-      return { ok: false, message: "No se pudo conectar con el servidor. Intenta de nuevo." };
+      return {
+        ok: false,
+        message: "No se pudo conectar con el servidor. Intenta de nuevo.",
+      };
     }
   };
 
@@ -107,21 +121,24 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Helper para cualquier fetch autenticado desde otros componentes
-  const authFetch = useCallback(async (url, options = {}) => {
-    let access = localStorage.getItem("access_token");
-    const payload = parseJwt(access);
-    if (payload && payload.exp * 1000 - Date.now() < 60_000) {
-      access = await refreshAccessToken();
-    }
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access}`,
-        ...(options.headers || {}),
-      },
-    });
-  }, []);
+  const authFetch = useCallback(
+    async (url, options = {}) => {
+      let access = localStorage.getItem("access_token");
+      const payload = parseJwt(access);
+      if (payload && payload.exp * 1000 - Date.now() < 60_000) {
+        access = await refreshAccessToken();
+      }
+      return fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${access}`,
+          ...(options.headers || {}),
+        },
+      });
+    },
+    [] // refreshAccessToken está definido en el mismo closure
+  );
 
   const value = useMemo(
     () => ({
@@ -137,9 +154,7 @@ export function AuthProvider({ children }) {
   );
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 }
 

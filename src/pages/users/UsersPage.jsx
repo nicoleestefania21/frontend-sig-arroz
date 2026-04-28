@@ -1,12 +1,11 @@
+// src/pages/users/UsersPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import UserForm from "../../components/users/UserForm";
 import UserTable from "../../components/users/UserTable";
 import RolePermissions from "../../components/users/RolePermissions";
 import "../../styles/users.css";
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8000/api/users";
+import { API } from "../../config/api";
 
 function UsersPage() {
   const { authFetch, user: currentUser, isAdmin } = useAuth();
@@ -38,7 +37,7 @@ function UsersPage() {
     async function loadUsers() {
       try {
         setLoading(true);
-        const res = await authFetch(`${API_URL}/list/`, { method: "GET" });
+        const res = await authFetch(`${API.users}/list/`, { method: "GET" });
         if (!res.ok) {
           console.error("Error al cargar usuarios:", res.status);
           setError("No se pudieron cargar los usuarios.");
@@ -59,9 +58,8 @@ function UsersPage() {
   // ── Búsqueda ─────────────────────────────────────────────
   const filteredUsers = useMemo(() => {
     return users.filter((user) =>
-      `${user.first_name || ""} ${user.last_name || ""} ${
-        user.username
-      } ${user.email || ""} ${user.role} ${user.estado}`
+      `${user.first_name || ""} ${user.last_name || ""} ${user.username
+        } ${user.email || ""} ${user.role} ${user.estado}`
         .toLowerCase()
         .includes(search.toLowerCase())
     );
@@ -85,7 +83,7 @@ function UsersPage() {
           estado: formData.estado === "Activo" ? "ACTIVO" : "INACTIVO",
         };
 
-        const res = await authFetch(`${API_URL}/${editingUser.id}/`, {
+        const res = await authFetch(`${API.users}/${editingUser.id}/`, {
           method: "PUT",
           body: JSON.stringify(payload),
         });
@@ -94,8 +92,8 @@ function UsersPage() {
         if (!res.ok) {
           setError(
             data.detail ||
-              data.message ||
-              "Error al actualizar usuario. Revisa los datos."
+            data.message ||
+            "Error al actualizar usuario. Revisa los datos."
           );
           setLoading(false);
           return;
@@ -109,7 +107,7 @@ function UsersPage() {
       } else {
         // CREAR usuario nuevo
         const payload = {
-          username: formData.username, // asegúrate que UserForm tenga este campo
+          username: formData.username,
           password: formData.password,
           first_name: formData.nombre.split(" ")[0] || "",
           last_name: formData.nombre.split(" ").slice(1).join(" ") || "",
@@ -118,7 +116,7 @@ function UsersPage() {
           estado: formData.estado === "Activo" ? "ACTIVO" : "INACTIVO",
         };
 
-        const res = await authFetch(`${API_URL}/register/`, {
+        const res = await authFetch(`${API.users}/register/`, {
           method: "POST",
           body: JSON.stringify(payload),
         });
@@ -135,8 +133,10 @@ function UsersPage() {
           return;
         }
 
-        // Vuelve a cargar la lista o agrega uno simple
-        const resList = await authFetch(`${API_URL}/list/`, { method: "GET" });
+        // Vuelve a cargar la lista
+        const resList = await authFetch(`${API.users}/list/`, {
+          method: "GET",
+        });
         if (resList.ok) {
           const list = await resList.json();
           setUsers(list);
@@ -155,16 +155,7 @@ function UsersPage() {
   const handleEditUser = (user) => {
     setEditingUser(user);
 
-    // Adaptar el usuario del backend al formato que espera UserForm
-    const nombreCompleto = `${user.first_name || ""} ${
-      user.last_name || ""
-    }`.trim();
     const rolFront = mapRolBackToFront(user.role);
-    const estadoFront = user.estado === "ACTIVO" ? "Activo" : "Inactivo";
-
-    // OJO: UserForm debe aceptar initialValues o similar. Si no, deberás ajustar allí.
-    // Por ahora, solo guardamos el usuario para que UserForm lo reciba como prop.
-    // (UserForm ya usa editingUser en tus props originales).
     setSelectedRole(rolFront);
   };
 
@@ -198,7 +189,9 @@ function UsersPage() {
             onRoleChange={setSelectedRole}
             loading={loading}
           />
-          {error && <div className="users-alert users-alert--error">{error}</div>}
+          {error && (
+            <div className="users-alert users-alert--error">{error}</div>
+          )}
           {success && (
             <div className="users-alert users-alert--success">{success}</div>
           )}
