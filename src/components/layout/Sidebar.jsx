@@ -1,21 +1,22 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
+// Los roles ahora usan los valores reales del backend Django
 const navItems = [
   {
     to: "/inicio",
     label: "Inicio",
-    roles: ["Administrador", "Técnico", "Productor"],
+    roles: ["ADMIN", "TECNICO", "PRODUCTOR", "OPERADOR"],
   },
   {
     to: "/fincas-lotes",
     label: "Registro de fincas y lotes",
-    roles: ["Administrador", "Técnico", "Productor"],
+    roles: ["ADMIN", "TECNICO", "PRODUCTOR", "OPERADOR"],
   },
   {
     to: "/usuarios",
     label: "Gestión de usuarios",
-    roles: ["Administrador"],
+    roles: ["ADMIN"],
   },
 ];
 
@@ -28,9 +29,31 @@ function Sidebar() {
     navigate("/login");
   };
 
-  const itemsVisibles = navItems.filter((item) =>
-    item.roles.includes(user?.rol)
-  );
+// Por esta:
+const itemsVisibles = navItems.filter((item) =>
+  item.roles.includes(user?.role) ||
+  (user?.is_superuser && item.roles.includes("ADMIN"))
+);
+
+  // Nombre para mostrar: primero first_name, si no username
+  const displayName =
+    user?.first_name && user?.last_name
+      ? `${user.first_name} ${user.last_name}`
+      : user?.first_name || user?.username || "Usuario";
+
+  // Inicial para el avatar
+  const avatarLetter = (user?.first_name || user?.username || "U")
+    .charAt(0)
+    .toUpperCase();
+
+  // Rol legible en español
+  const roleLabels = {
+    ADMIN: "Administrador",
+    TECNICO: "Técnico Agrícola",
+    PRODUCTOR: "Productor Arrocero",
+    OPERADOR: "Operador de Campo",
+  };
+  const displayRole = roleLabels[user?.role] || user?.role || "";
 
   return (
     <aside className="global-sidebar">
@@ -58,11 +81,11 @@ function Sidebar() {
       <div className="global-sidebar__footer">
         <div className="global-sidebar__user">
           <div className="global-sidebar__user-avatar">
-            {user?.nombre?.charAt(0).toUpperCase()}
+            {avatarLetter}
           </div>
           <div className="global-sidebar__user-info">
-            <span className="global-sidebar__user-name">{user?.nombre}</span>
-            <span className="global-sidebar__user-role">{user?.rol}</span>
+            <span className="global-sidebar__user-name">{displayName}</span>
+            <span className="global-sidebar__user-role">{displayRole}</span>
           </div>
         </div>
 

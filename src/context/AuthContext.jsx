@@ -1,117 +1,139 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext();
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/users";
 
-// Usuarios locales para desarrollo — solo activos cuando VITE_USE_MOCK=true
-const mockUsers = [
-  {
-    id: 1,
-    nombre: "Nicole Angarita",
-    username: "admin",
-    correo: "admin@sigarroz.com",
-    password: "123456",
-    rol: "Administrador",
-  },
-  {
-    id: 2,
-    nombre: "Carlos Gómez",
-    username: "tecnico",
-    correo: "tecnico@sigarroz.com",
-    password: "123456",
-    rol: "Técnico",
-  },
-  {
-    id: 3,
-    nombre: "Ana Pérez",
-    username: "productor",
-    correo: "productor@sigarroz.com",
-    password: "123456",
-    rol: "Productor",
-  },
-];
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [tokens, setTokens] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ── Al montar: restaurar sesión desde localStorage ──
   useEffect(() => {
-    if (!USE_MOCK) {
-      const savedTokens = localStorage.getItem("authTokens");
-      const savedUser = localStorage.getItem("authUser");
-      if (savedTokens) setTokens(JSON.parse(savedTokens));
-      if (savedUser) setUser(JSON.parse(savedUser));
+    const access = localStorage.getItem("access_token");
+    if (!access) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    const payload = parseJwt(access);
+    if (payload && payload.exp * 1000 > Date.now()) {
+      fetchMe(access);
+    } else {
+      refreshAccessToken().finally(() => setLoading(false));
+    }
   }, []);
 
-  const login = async ({ username, password }) => {
-    // ── Modo local (sin backend) ─────────────────────────
-    if (USE_MOCK) {
-      const found = mockUsers.find(
-        (u) =>
-          (u.username === username || u.correo === username) &&
-          u.password === password
-      );
-      if (!found) {
-        return { ok: false, message: "Credenciales inválidas." };
+  async function fetchMe(access) {
+    try {
+      const res = await fetch(`${API_URL}/me/`, {
+        headers: { Authorization: `Bearer ${access}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      } else {
+        clearSession();
       }
-      setUser(found);
-      return { ok: true, user: found };
+    } catch {
+      clearSession();
+    } finally {
+      setLoading(false);
     }
+  }
 
-    // ── Modo real (Django JWT) ───────────────────────────
+  async function refreshAccessToken() {
+    const refresh = localStorage.getItem("refresh_token");
+    if (!refresh) return null;
+    try {
+      const res = await fetch(`${API_URL}/token/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("access_token", data.access);
+        await fetchMe(data.access);
+        return data.access;
+      } else {
+        clearSession();
+        return null;
+      }
+    } catch {
+      clearSession();
+      return null;
+    }
+  }
+
+  function clearSession() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setUser(null);
+  }
+
+  const login = async ({ username, password }) => {
     try {
       const res = await fetch(`${API_URL}/token/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         return {
           ok: false,
-          message: data.detail || "Credenciales inválidas.",
+          message: data.detail || "Credenciales inválidas. Verifica tu usuario y contraseña.",
         };
       }
-
-      const authTokens = { access: data.access, refresh: data.refresh };
-      const authUser = { username };
-
-      setTokens(authTokens);
-      setUser(authUser);
-      localStorage.setItem("authTokens", JSON.stringify(authTokens));
-      localStorage.setItem("authUser", JSON.stringify(authUser));
-
-      return { ok: true, user: authUser };
-    } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-      return { ok: false, message: "Error de conexión con el servidor." };
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      await fetchMe(data.access);
+      return { ok: true };
+    } catch {
+      return { ok: false, message: "No se pudo conectar con el servidor. Intenta de nuevo." };
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setTokens(null);
-    localStorage.removeItem("authTokens");
-    localStorage.removeItem("authUser");
-  };
+  const logout = useCallback(() => {
+    clearSession();
+  }, []);
+
+  // Helper para cualquier fetch autenticado desde otros componentes
+  const authFetch = useCallback(async (url, options = {}) => {
+    let access = localStorage.getItem("access_token");
+    const payload = parseJwt(access);
+    if (payload && payload.exp * 1000 - Date.now() < 60_000) {
+      access = await refreshAccessToken();
+    }
+    return fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${access}`,
+        ...(options.headers || {}),
+      },
+    });
+  }, []);
 
   const value = useMemo(
     () => ({
       user,
-      tokens,
       login,
       logout,
       loading,
-      isAuthenticated: USE_MOCK ? !!user : !!tokens?.access,
+      authFetch,
+      isAuthenticated: !!user,
+      isAdmin: user?.role === "ADMIN",
     }),
-    [user, tokens, loading]
+    [user, loading]
   );
 
   return (
