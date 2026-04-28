@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 const createInitialForm = (farmId) => ({
-    fincaId: farmId || "",
+    fincaId: farmId ?? "",
     nombre: "",
     area: "",
     tipo_suelo: "Franco-arcilloso",
@@ -12,22 +12,25 @@ const createInitialForm = (farmId) => ({
 });
 
 function LotForm({
-                     farms = [],
-                     currentFarmId,
-                     editingLot,
-                     onSave,
-                     onCancelEdit,
-                 }) {
+    farms = [],
+    currentFarmId,
+    editingLot,
+    onSave,
+    onCancelEdit,
+}) {
     const [form, setForm] = useState(createInitialForm(currentFarmId));
 
     useEffect(() => {
         if (editingLot) {
             setForm({
-                fincaId: editingLot.finca || editingLot.fincaId || "",
-                nombre: editingLot.nombre || "",
+                fincaId: editingLot.finca ?? editingLot.fincaId ?? currentFarmId ?? "",
+                nombre: editingLot.nombre ?? "",
                 area: editingLot.area ?? "",
-                tipo_suelo: editingLot.tipo_suelo || "Franco-arcilloso",
-                estado: editingLot.estado || "DISPONIBLE",
+                tipo_suelo:
+                    editingLot.tipo_suelo ??
+                    editingLot.tipoSuelo ??
+                    "Franco-arcilloso",
+                estado: editingLot.estado ?? "DISPONIBLE",
                 latitud:
                     editingLot.latitud === null || editingLot.latitud === undefined
                         ? ""
@@ -36,7 +39,7 @@ function LotForm({
                     editingLot.longitud === null || editingLot.longitud === undefined
                         ? ""
                         : editingLot.longitud,
-                observaciones: editingLot.observaciones || "",
+                observaciones: editingLot.observaciones ?? "",
             });
         } else {
             setForm(createInitialForm(currentFarmId));
@@ -45,9 +48,15 @@ function LotForm({
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
         setForm((prev) => ({
             ...prev,
-            [name]: name === "fincaId" ? Number(value) : value,
+            [name]:
+                name === "fincaId"
+                    ? value === ""
+                        ? ""
+                        : Number(value)
+                    : value,
         }));
     };
 
@@ -57,13 +66,13 @@ function LotForm({
 
         const payload = {
             finca: Number(form.fincaId),
-            nombre: form.nombre,
+            nombre: form.nombre.trim(),
             area: Number(form.area),
             tipo_suelo: form.tipo_suelo,
             estado: form.estado,
             latitud: form.latitud === "" ? null : Number(form.latitud),
             longitud: form.longitud === "" ? null : Number(form.longitud),
-            observaciones: form.observaciones ?? "",
+            observaciones: form.observaciones?.trim() || "",
         };
 
         onSave(payload);
@@ -80,7 +89,6 @@ function LotForm({
                 <p>Registra los datos completos del lote asociado a la finca.</p>
             </div>
 
-            {/* Fila: finca y nombre */}
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="fincaId">Finca</label>
@@ -114,7 +122,6 @@ function LotForm({
                 </div>
             </div>
 
-            {/* Fila: área y tipo de suelo */}
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="area">Área (ha)</label>
@@ -146,7 +153,6 @@ function LotForm({
                 </div>
             </div>
 
-            {/* Fila: estado */}
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="estado">Estado del lote</label>
@@ -163,12 +169,9 @@ function LotForm({
                     </select>
                 </div>
 
-                <div className="form-group">
-                    {/* espacio libre por si luego agregas otro campo */}
-                </div>
+                <div className="form-group"></div>
             </div>
 
-            {/* Fila: coordenadas */}
             <div className="form-row">
                 <div className="form-group">
                     <label htmlFor="latitud">Latitud</label>
@@ -182,6 +185,7 @@ function LotForm({
                         placeholder="Opcional"
                     />
                 </div>
+
                 <div className="form-group">
                     <label htmlFor="longitud">Longitud</label>
                     <input
@@ -196,7 +200,6 @@ function LotForm({
                 </div>
             </div>
 
-            {/* Observaciones */}
             <div className="form-group">
                 <label htmlFor="observaciones">Observaciones</label>
                 <textarea
@@ -219,6 +222,7 @@ function LotForm({
                         Cancelar edición
                     </button>
                 )}
+
                 <button type="submit" className="btn btn-primary">
                     {editingLot ? "Guardar cambios" : "Registrar lote"}
                 </button>
