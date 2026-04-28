@@ -15,13 +15,11 @@ function FarmsLotsPage() {
   const [selectedFarmId, setSelectedFarmId] = useState(null);
   const [editingLot, setEditingLot] = useState(null);
 
-  // Cargar fincas y lotes desde el backend solo cuando ya hay sesión
   useEffect(() => {
     if (loading || !isAuthenticated) return;
 
     async function loadData() {
       try {
-        // 1. Cargar fincas
         const resFincas = await authFetch(`${API.fincas}/`);
         if (!resFincas.ok) {
           console.error("Error al cargar fincas:", resFincas.status);
@@ -30,12 +28,10 @@ function FarmsLotsPage() {
         const dataFincas = await resFincas.json();
         setFarms(dataFincas);
 
-        // Seleccionar la primera finca si existe
         if (dataFincas.length > 0) {
-          setSelectedFarmId(dataFincas[0].id);
+          setSelectedFarmId((prev) => prev ?? dataFincas[0].id);
         }
 
-        // 2. Cargar lotes
         const resLotes = await authFetch(`${API.lotes}/`);
         if (!resLotes.ok) {
           console.error("Error al cargar lotes:", resLotes.status);
@@ -58,10 +54,9 @@ function FarmsLotsPage() {
 
   const filteredLots = useMemo(() => {
     if (selectedFarmId === null) return [];
-    return lots.filter((lot) => lot.finca === selectedFarmId);
+    return lots.filter((lot) => (lot.finca ?? lot.fincaId) === selectedFarmId);
   }, [lots, selectedFarmId]);
 
-  // Crear finca en el backend
   const handleAddFarm = async (farmData) => {
     try {
       const res = await authFetch(`${API.fincas}/`, {
@@ -83,13 +78,84 @@ function FarmsLotsPage() {
     }
   };
 
-  // Crear o editar lote en el backend
+  const handleEditFarm = async (farm) => {
+    const nuevoNombre = window.prompt("Editar nombre de la finca", farm.nombre);
+    if (nuevoNombre === null) return;
+
+    const nuevaUbicacion = window.prompt("Editar ubicación", farm.ubicacion);
+    if (nuevaUbicacion === null) return;
+
+    const nuevasCaracteristicas = window.prompt(
+      "Editar características",
+      farm.caracteristicas
+    );
+    if (nuevasCaracteristicas === null) return;
+
+    const payload = {
+      nombre: nuevoNombre,
+      ubicacion: nuevaUbicacion,
+      caracteristicas: nuevasCaracteristicas,
+    };
+
+    try {
+      const res = await authFetch(`${API.fincas}/${farm.id}/`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.error("Error al editar finca:", res.status);
+        return;
+      }
+
+      const updatedFarm = await res.json();
+      setFarms((prev) =>
+        prev.map((item) => (item.id === farm.id ? updatedFarm : item))
+      );
+    } catch (error) {
+      console.error("Error de red al editar finca:", error);
+    }
+  };
+
+  const handleDeleteFarm = async (farmId) => {
+    const confirmDelete = window.confirm(
+      "¿Seguro que deseas eliminar esta finca?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await authFetch(`${API.fincas}/${farmId}/`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        console.error("Error al eliminar finca:", res.status);
+        return;
+      }
+
+      setFarms((prev) => {
+        const updated = prev.filter((farm) => farm.id !== farmId);
+
+        if (selectedFarmId === farmId) {
+          setSelectedFarmId(updated.length > 0 ? updated[0].id : null);
+        }
+
+        return updated;
+      });
+
+      setLots((prev) =>
+        prev.filter((lot) => (lot.finca ?? lot.fincaId) !== farmId)
+      );
+    } catch (error) {
+      console.error("Error de red al eliminar finca:", error);
+    }
+  };
+
   const handleSaveLot = async (lotData) => {
     if (!lotData.finca) return;
 
     try {
       if (editingLot) {
-        // Editar lote existente
         const res = await authFetch(`${API.lotes}/${editingLot.id}/`, {
           method: "PUT",
           body: JSON.stringify(lotData),
@@ -106,7 +172,6 @@ function FarmsLotsPage() {
         );
         setEditingLot(null);
       } else {
-        // Crear lote nuevo
         const res = await authFetch(`${API.lotes}/`, {
           method: "POST",
           body: JSON.stringify(lotData),
@@ -126,8 +191,34 @@ function FarmsLotsPage() {
   };
 
   const handleEditLot = (lot) => {
-    setEditingLot(lot);
-    setSelectedFarmId(lot.finca);
+    setEditingLot({
+      ...lot,
+      fincaId: lot.finca ?? lot.fincaId,
+      tipo_suelo: lot.tipo_suelo ?? lot.tipoSuelo,
+    });
+    setSelectedFarmId(lot.finca ?? lot.fincaId);
+  };
+
+  const handleDeleteLot = async (lotId) => {
+    const confirmDelete = window.confirm(
+      "¿Seguro que deseas eliminar este lote?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await authFetch(`${API.lotes}/${lotId}/`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        console.error("Error al eliminar lote:", res.status);
+        return;
+      }
+
+      setLots((prev) => prev.filter((lot) => lot.id !== lotId));
+    } catch (error) {
+      console.error("Error de red al eliminar lote:", error);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -135,49 +226,52 @@ function FarmsLotsPage() {
   };
 
   return (
-    <>
-      <div className="farms-lots-layout">
-        {/* Panel izquierdo: fincas */}
-        <aside className="farms-panel">
-          <FarmForm onSave={handleAddFarm} />
-          <FarmList
-            farms={farms}
-            selectedFarmId={selectedFarmId}
-            onSelect={setSelectedFarmId}
-          />
-        </aside>
+    <div className="farms-lots-layout">
+      <aside className="farms-panel">
+        <FarmForm onSave={handleAddFarm} />
+        <FarmList
+          farms={farms}
+          selectedFarmId={selectedFarmId}
+          onSelect={setSelectedFarmId}
+          onEdit={handleEditFarm}
+          onDelete={handleDeleteFarm}
+        />
+      </aside>
 
-        {/* Panel derecho: lotes */}
-        <main className="lots-panel">
-          <div className="selected-farm-info">
-            <h2>Finca seleccionada</h2>
-            <p>El lote se registrará asociado a esta finca.</p>
+      <main className="lots-panel">
+        <div className="selected-farm-info">
+          <h2>Finca seleccionada</h2>
+          <p>El lote se registrará asociado a esta finca.</p>
 
-            {selectedFarm ? (
-              <div className="farm-detail">
-                <strong>{selectedFarm.nombre}</strong>
-                <p>Ubicación: {selectedFarm.ubicacion}</p>
-                <p>Características: {selectedFarm.caracteristicas}</p>
-              </div>
-            ) : (
-              <p className="text-muted">
-                Primero registra o selecciona una finca.
-              </p>
-            )}
-          </div>
+          {selectedFarm ? (
+            <div className="farm-detail">
+              <strong>{selectedFarm.nombre}</strong>
+              <p>Ubicación: {selectedFarm.ubicacion}</p>
+              <p>Características: {selectedFarm.caracteristicas}</p>
+            </div>
+          ) : (
+            <p className="text-muted">
+              Primero registra o selecciona una finca.
+            </p>
+          )}
+        </div>
 
-          <LotForm
-            farms={farms}
-            selectedFarmId={selectedFarmId}
-            editingLot={editingLot}
-            onSave={handleSaveLot}
-            onCancel={handleCancelEdit}
-          />
+        <LotForm
+          farms={farms}
+          currentFarmId={selectedFarmId}
+          editingLot={editingLot}
+          onSave={handleSaveLot}
+          onCancelEdit={handleCancelEdit}
+        />
 
-          <LotTable lots={filteredLots} onEdit={handleEditLot} />
-        </main>
-      </div>
-    </>
+        <LotTable
+          lots={filteredLots}
+          selectedFarm={selectedFarm}
+          onEdit={handleEditLot}
+          onDelete={handleDeleteLot}
+        />
+      </main>
+    </div>
   );
 }
 
