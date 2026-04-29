@@ -1,50 +1,45 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Sidebar from "./components/layout/Sidebar";
 import HomePage from "./pages/dashboard/HomePage";
 import FarmsLotsPage from "./pages/farms/FarmsLotsPage";
 import UsersPage from "./pages/users/UsersPage";
 import LoginPage from "./pages/auth/LoginPage";
-import { AuthProvider, useAuth } from "./context/AuthContext";
 import "./styles/app-layout.css";
 
-function ProtectedLayout() {
+// Layout que envuelve la app con el Sidebar
+function MainLayout() {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
-    return <div>Cargando...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (loading) return <div style={{ padding: "50px", textAlign: "center" }}>Cargando SIG-ARROZ...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
-    <div className="app-shell">
+    <div className="app-layout">
       <Sidebar />
-
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<Navigate to="/fincas-lotes" replace />} />
-          <Route path="/inicio" element={<HomePage />} />
-          <Route path="/fincas-lotes" element={<FarmsLotsPage />} />
-          <Route path="/usuarios" element={<UsersPage />} />
-        </Routes>
+      <main className="main-content">
+        <Outlet /> {/* Aquí se renderiza la página activa */}
       </main>
     </div>
   );
 }
 
 function App() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <div style={{ padding: "50px", textAlign: "center" }}>Cargando SIG-ARROZ...</div>;
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/*" element={<ProtectedLayout />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <Routes>
+      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />} />
+
+      {/* Rutas protegidas dentro del MainLayout */}
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/fincas-lotes" element={<FarmsLotsPage />} />
+        <Route path="/users" element={<UsersPage />} />
+      </Route>
+    </Routes>
   );
 }
 
