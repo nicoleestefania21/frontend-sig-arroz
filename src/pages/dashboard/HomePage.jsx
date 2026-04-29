@@ -7,19 +7,47 @@ const modules = [
     {
         title: "Fincas y lotes",
         description:
-            "Registra y administra fincas, asocia lotes con área, tipo de suelo y estado.",
-        icon: "🌾",
+            "Registra fincas, organiza lotes y controla el estado agrícola desde una sola vista.",
         path: "/fincas-lotes",
-        color: "card-green",
+        badge: "Operación agrícola",
+        tone: "green",
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 20h16" />
+                <path d="M7 20v-6l5-4 5 4v6" />
+                <path d="M10 20v-3h4v3" />
+                <path d="M12 5c1 2 1 3 0 5" />
+                <path d="M9 8c1 1 2 2 3 2" />
+                <path d="M15 8c-1 1-2 2-3 2" />
+            </svg>
+        ),
     },
     {
         title: "Usuarios",
-        description: "Gestiona los usuarios del sistema y sus roles de acceso.",
-        icon: "👥",
+        description:
+            "Administra accesos, perfiles y roles del sistema con una gestión más clara.",
         path: "/usuarios",
-        color: "card-blue",
+        badge: "Administración",
+        tone: "blue",
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+                <circle cx="9.5" cy="8" r="3.5" />
+                <path d="M17 11a3 3 0 1 0 0-6" />
+                <path d="M21 21v-2a4 4 0 0 0-3-3.87" />
+            </svg>
+        ),
     },
 ];
+
+function formatToday() {
+    return new Intl.DateTimeFormat("es-CO", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    }).format(new Date());
+}
 
 function HomePage() {
     const navigate = useNavigate();
@@ -27,15 +55,12 @@ function HomePage() {
 
     const [farms, setFarms] = useState([]);
     const [lots, setLots] = useState([]);
-    // Si luego quieres que el número de usuarios sea dinámico, descomenta:
-    // const [users, setUsers] = useState([]);
 
     const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         async function loadData() {
             try {
-                // Fincas
                 const resFincas = await fetch(`${API_URL}/fincas/`);
                 if (resFincas.ok) {
                     const dataFincas = await resFincas.json();
@@ -44,7 +69,6 @@ function HomePage() {
                     console.error("Error al cargar fincas en Home:", resFincas.status);
                 }
 
-                // Lotes
                 const resLotes = await fetch(`${API_URL}/lotes/`);
                 if (resLotes.ok) {
                     const dataLotes = await resLotes.json();
@@ -52,17 +76,6 @@ function HomePage() {
                 } else {
                     console.error("Error al cargar lotes en Home:", resLotes.status);
                 }
-
-                // Usuarios (dejado como ejemplo, depende de tu endpoint)
-                /*
-                const resUsuarios = await fetch(`${API_URL}/usuarios/`);
-                if (resUsuarios.ok) {
-                  const dataUsuarios = await resUsuarios.json();
-                  setUsers(dataUsuarios);
-                } else {
-                  console.error("Error al cargar usuarios en Home:", resUsuarios.status);
-                }
-                */
             } catch (error) {
                 console.error("Error de red al cargar estadísticas del inicio:", error);
             }
@@ -71,77 +84,122 @@ function HomePage() {
         loadData();
     }, [API_URL]);
 
-    const today = new Date().toLocaleDateString("es-CO", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
+    const today = formatToday();
+    const displayName = user?.nombre || user?.username || "administrador";
 
     const stats = [
         {
             label: "Fincas registradas",
             value: farms.length,
-            icon: "🏡",
+            helper: "Base productiva",
+            tone: "success",
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 20h18" />
+                    <path d="M6 20V10l6-4 6 4v10" />
+                    <path d="M10 20v-4h4v4" />
+                </svg>
+            ),
         },
         {
             label: "Lotes activos",
             value: lots.length,
-            icon: "📐",
+            helper: "Seguimiento operativo",
+            tone: "warning",
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 18c3-4 5-6 8-6s5 2 8 6" />
+                    <path d="M8 9c1.5 1 3 2.5 4 5" />
+                    <path d="M16 7c-1 1.5-2 3-4 4" />
+                </svg>
+            ),
         },
-        // Si activas el estado de usuarios, puedes usar:
-        // { label: "Usuarios del sistema", value: users.length, icon: "👤" },
         {
             label: "Usuarios del sistema",
-            value: 4, // por ahora un valor fijo
-            icon: "👤",
+            value: 4,
+            helper: "Accesos configurados",
+            tone: "info",
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+                    <circle cx="9.5" cy="8" r="3.5" />
+                    <path d="M19 8h2" />
+                    <path d="M20 7v2" />
+                </svg>
+            ),
         },
     ];
 
     return (
-        <div className="home">
-            {/* Bienvenida */}
-            <div className="home__welcome">
-                <div>
-                    <h1 className="home__title">
-                        Bienvenido{user?.nombre ? `, ${user.nombre}` : ""}
-                    </h1>
-                    <p className="home__date">{today}</p>
-                </div>
-                <span className="home__badge">SIG-ARROZ</span>
-            </div>
-
-            {/* Estadísticas */}
-            <div className="home__stats">
-                {stats.map((stat) => (
-                    <div key={stat.label} className="stat-card">
-                        <span className="stat-card__icon">{stat.icon}</span>
-                        <div>
-                            <p className="stat-card__value">{stat.value}</p>
-                            <p className="stat-card__label">{stat.label}</p>
-                        </div>
+        <div className="home-page">
+            <section className="home-hero home-hero--single">
+                <div className="home-hero__main home-hero__main--wide">
+                    <div className="home-hero__topline">
+                        <span className="home-kicker">Panel principal</span>
+                        <span className="home-brand-pill">SIG-ARROZ</span>
                     </div>
-                ))}
-            </div>
 
-            {/* Accesos rápidos */}
-            <h2 className="home__section-title">Módulos disponibles</h2>
-            <div className="home__modules">
-                {modules.map((mod) => (
-                    <button
-                        key={mod.path}
-                        className={`module-card ${mod.color}`}
-                        onClick={() => navigate(mod.path)}
-                    >
-                        <span className="module-card__icon">{mod.icon}</span>
-                        <div className="module-card__body">
-                            <h3>{mod.title}</h3>
-                            <p>{mod.description}</p>
+                    <h1 className="home-title">Bienvenido, {displayName}</h1>
+                    <p className="home-date">{today}</p>
+                    <p className="home-description">
+                        Visualiza el estado general del sistema y accede rápidamente a los módulos
+                        principales desde una portada más limpia, sólida y profesional.
+                    </p>
+                </div>
+            </section>
+
+            <section className="home-stats" aria-label="Indicadores principales">
+                {stats.map((stat) => (
+                    <article key={stat.label} className={`metric-card metric-card--${stat.tone}`}>
+                        <div className="metric-card__icon" aria-hidden="true">
+                            {stat.icon}
                         </div>
-                        <span className="module-card__arrow">→</span>
-                    </button>
+                        <div className="metric-card__content">
+                            <span className="metric-card__label">{stat.label}</span>
+                            <strong className="metric-card__value">{stat.value}</strong>
+                            <small className="metric-card__helper">{stat.helper}</small>
+                        </div>
+                    </article>
                 ))}
-            </div>
+            </section>
+
+            <section className="home-layout home-layout--single">
+                <article className="home-section-card home-section-card--modules home-section-card--full">
+                    <div className="home-section-card__head">
+                        <span className="home-kicker">Accesos</span>
+                        <h2>Módulos disponibles</h2>
+                        <p>
+                            Áreas principales del sistema presentadas con mayor orden y jerarquía
+                            para entrar más rápido y con mejor lectura visual.
+                        </p>
+                    </div>
+
+                    <div className="module-grid">
+                        {modules.map((mod) => (
+                            <button
+                                key={mod.path}
+                                type="button"
+                                className={`module-card module-card--${mod.tone}`}
+                                onClick={() => navigate(mod.path)}
+                            >
+                                <div className="module-card__header">
+                                    <span className="module-card__badge">{mod.badge}</span>
+                                    <span className="module-card__glyph" aria-hidden="true">
+                                        {mod.icon}
+                                    </span>
+                                </div>
+
+                                <div className="module-card__body">
+                                    <h3>{mod.title}</h3>
+                                    <p>{mod.description}</p>
+                                </div>
+
+                                <span className="module-card__cta">Entrar al módulo</span>
+                            </button>
+                        ))}
+                    </div>
+                </article>
+            </section>
         </div>
     );
 }

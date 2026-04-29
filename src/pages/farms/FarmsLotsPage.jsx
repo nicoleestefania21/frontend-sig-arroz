@@ -58,6 +58,26 @@ function FarmsLotsPage() {
     return lots.filter((lot) => (lot.finca ?? lot.fincaId) === selectedFarmId);
   }, [lots, selectedFarmId]);
 
+  const stats = useMemo(() => {
+    const totalArea = farms.reduce(
+      (acc, farm) => acc + Number(farm.area_total ?? farm.areatotal ?? 0),
+      0
+    );
+
+    return {
+      totalFarms: farms.length,
+      totalLots: lots.length,
+      selectedFarmLots: filteredLots.length,
+      totalArea,
+    };
+  }, [farms, lots, filteredLots]);
+
+  const formatNumber = (value) =>
+    new Intl.NumberFormat("es-CO", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(Number(value || 0));
+
   const handleSaveFarm = async (farmData) => {
     try {
       if (editingFarm) {
@@ -224,60 +244,163 @@ function FarmsLotsPage() {
   };
 
   return (
-    <div className="farms-lots-layout">
-      <aside className="farms-panel">
-        <FarmForm
-          onSave={handleSaveFarm}
-          editingFarm={editingFarm}
-          onCancelEdit={handleCancelEditFarm}
-        />
-
-        <FarmList
-          farms={farms}
-          selectedFarmId={selectedFarmId}
-          onSelect={setSelectedFarmId}
-          onEdit={handleEditFarm}
-          onDelete={handleDeleteFarm}
-        />
-      </aside>
-
-      <main className="lots-panel">
-        <div className="selected-farm-info">
-          <h2>Finca seleccionada</h2>
-          <p>El lote se registrará asociado a esta finca.</p>
-
-          {selectedFarm ? (
-            <div className="farm-detail">
-              <strong>{selectedFarm.nombre}</strong>
-              <p>Departamento: {selectedFarm.departamento}</p>
-              <p>Municipio: {selectedFarm.municipio}</p>
-              <p>Vereda: {selectedFarm.vereda}</p>
-              <p>Área total: {selectedFarm.area_total ?? selectedFarm.areatotal} ha</p>
-              <p>Tipo de suelo: {selectedFarm.tipo_suelo ?? selectedFarm.tiposuelo}</p>
-              <p>Observaciones: {selectedFarm.observaciones || "Sin observaciones"}</p>
-            </div>
-          ) : (
-            <p className="text-muted">
-              Primero registra o selecciona una finca.
-            </p>
-          )}
+    <div className="fl-page">
+      <header className="fl-hero">
+        <div className="fl-hero__content">
+          <span className="fl-eyebrow">Gestión agrícola</span>
+          <h1>Registro de fincas y lotes</h1>
+          <p>
+            Centraliza la base productiva, organiza tus fincas y administra los
+            lotes desde una sola vista.
+          </p>
         </div>
 
-        <LotForm
-          farms={farms}
-          currentFarmId={selectedFarmId}
-          editingLot={editingLot}
-          onSave={handleSaveLot}
-          onCancelEdit={handleCancelEditLot}
-        />
+        <div className="fl-hero__chips">
+          <span className="fl-chip">Módulo operativo</span>
+          <span className="fl-chip fl-chip--accent">
+            {selectedFarm ? "Finca activa" : "Sin selección"}
+          </span>
+        </div>
+      </header>
 
+      <section className="fl-stats">
+        <article className="fl-stat-card">
+          <span className="fl-stat-card__label">Fincas registradas</span>
+          <strong>{stats.totalFarms}</strong>
+          <p>Total de unidades productivas creadas.</p>
+        </article>
+
+        <article className="fl-stat-card">
+          <span className="fl-stat-card__label">Lotes registrados</span>
+          <strong>{stats.totalLots}</strong>
+          <p>Inventario general de lotes en el sistema.</p>
+        </article>
+
+        <article className="fl-stat-card">
+          <span className="fl-stat-card__label">Área acumulada</span>
+          <strong>{formatNumber(stats.totalArea)} ha</strong>
+          <p>Suma del área total reportada por las fincas.</p>
+        </article>
+
+        <article className="fl-stat-card fl-stat-card--highlight">
+          <span className="fl-stat-card__label">Lotes de la finca activa</span>
+          <strong>{selectedFarm ? stats.selectedFarmLots : "--"}</strong>
+          <p>
+            {selectedFarm
+              ? `Asociados a ${selectedFarm.nombre}.`
+              : "Selecciona una finca para ver el detalle."}
+          </p>
+        </article>
+      </section>
+
+      <section className="fl-layout">
+        <div className="fl-column">
+          <div className="fl-card fl-card--soft">
+            <FarmForm
+              onSave={handleSaveFarm}
+              editingFarm={editingFarm}
+              onCancelEdit={handleCancelEditFarm}
+            />
+          </div>
+
+          <div className="fl-card fl-card--list">
+            <FarmList
+              farms={farms}
+              selectedFarmId={selectedFarmId}
+              onSelect={setSelectedFarmId}
+              onEdit={handleEditFarm}
+              onDelete={handleDeleteFarm}
+            />
+          </div>
+        </div>
+
+        <div className="fl-column">
+          <div className="fl-card fl-card--summary">
+            <div className="section-header">
+              <h2>Finca seleccionada</h2>
+              <p>Resumen contextual para registrar y revisar sus lotes.</p>
+            </div>
+
+            {selectedFarm ? (
+              <div className="farm-summary">
+                <div className="farm-summary__top">
+                  <div>
+                    <span className="farm-summary__eyebrow">Finca activa</span>
+                    <h3>{selectedFarm.nombre}</h3>
+                  </div>
+
+                  <span className="farm-summary__tag">
+                    {filteredLots.length} lote{filteredLots.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                <div className="farm-summary__grid">
+                  <div className="farm-summary__item">
+                    <span>Departamento</span>
+                    <strong>{selectedFarm.departamento || "Sin dato"}</strong>
+                  </div>
+
+                  <div className="farm-summary__item">
+                    <span>Municipio</span>
+                    <strong>{selectedFarm.municipio || "Sin dato"}</strong>
+                  </div>
+
+                  <div className="farm-summary__item">
+                    <span>Vereda</span>
+                    <strong>{selectedFarm.vereda || "Sin dato"}</strong>
+                  </div>
+
+                  <div className="farm-summary__item">
+                    <span>Área total</span>
+                    <strong>
+                      {formatNumber(
+                        selectedFarm.area_total ?? selectedFarm.areatotal ?? 0
+                      )}{" "}
+                      ha
+                    </strong>
+                  </div>
+
+                  <div className="farm-summary__item farm-summary__item--full">
+                    <span>Tipo de suelo</span>
+                    <strong>{selectedFarm.tipo_suelo || "Sin dato"}</strong>
+                  </div>
+                </div>
+
+                {selectedFarm.observaciones ? (
+                  <div className="farm-summary__note">
+                    <span>Observaciones</span>
+                    <p>{selectedFarm.observaciones}</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="empty-box">
+                Primero selecciona una finca para visualizar su resumen y
+                gestionar sus lotes.
+              </div>
+            )}
+          </div>
+
+          <div className="fl-card fl-card--soft">
+            <LotForm
+              farms={farms}
+              currentFarmId={selectedFarmId}
+              editingLot={editingLot}
+              onSave={handleSaveLot}
+              onCancelEdit={handleCancelEditLot}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="fl-card fl-card--table">
         <LotTable
           lots={filteredLots}
           selectedFarm={selectedFarm}
           onEdit={handleEditLot}
           onDelete={handleDeleteLot}
         />
-      </main>
+      </section>
     </div>
   );
 }

@@ -25,21 +25,46 @@ function getStatusInfo(estado) {
   };
 }
 
-function UserTable({ users = [], onEdit, onDelete, currentUserId }) {
+function UserTable({
+  users = [],
+  onEdit,
+  onDelete,
+  currentUserId,
+  search = "",
+  onSearchChange,
+}) {
   return (
     <div>
-      <div className="section-header">
-        <h2>Usuarios registrados</h2>
-        <p>
-          Consulta y administra los accesos creados.{" "}
-          {users.length === 0
-            ? "No hay usuarios registrados."
-            : `${users.length} usuario${users.length !== 1 ? "s" : ""} registrado${users.length !== 1 ? "s" : ""}.`}
-        </p>
+      <div className="users-table-toolbar">
+        <div className="users-table-toolbar__content">
+          <h2>Usuarios registrados</h2>
+          <p>
+            Consulta y administra los accesos creados.{" "}
+            {users.length === 0
+              ? "No hay usuarios registrados."
+              : `${users.length} usuario${users.length !== 1 ? "s" : ""} registrado${users.length !== 1 ? "s" : ""}.`}
+          </p>
+        </div>
+
+        <div className="users-table-toolbar__actions">
+          <label htmlFor="users-search" className="users-search-label">
+            Buscar usuario
+          </label>
+          <input
+            id="users-search"
+            type="text"
+            placeholder="Nombre, correo, rol o estado..."
+            value={search}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            className="users-search-input"
+          />
+        </div>
       </div>
 
       {users.length === 0 ? (
-        <div className="empty-box">No hay usuarios registrados todavía.</div>
+        <div className="empty-box users-empty-box">
+          No hay usuarios registrados todavía.
+        </div>
       ) : (
         <div className="table-wrapper">
           <table className="users-table">
