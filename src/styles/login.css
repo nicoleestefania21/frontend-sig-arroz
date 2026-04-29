@@ -15,8 +15,12 @@
   background:
     radial-gradient(circle at top left, rgba(39, 135, 95, 0.18), transparent 28%),
     radial-gradient(circle at bottom right, rgba(28, 124, 87, 0.14), transparent 24%),
-    linear-gradient(135deg, #edf4ef 0%, #f7faf8 46%, #eff6f1 100%);
+    linear-gradient(135deg, #edf4ef 0%, #f7faf2 0%, #eff6f1 100%);
   padding: clamp(16px, 2.4vw, 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
 }
 
 .login-shell__glow {
@@ -43,15 +47,22 @@
   background: rgba(54, 174, 120, 0.12);
 }
 
+/* Layout original grande de dos columnas */
 .login-frame {
   position: relative;
   z-index: 1;
-  height: calc(100dvh - clamp(32px, 5vw, 56px));
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1.18fr) minmax(340px, 430px);
   gap: clamp(18px, 2.4vw, 28px);
+  align-items: stretch;
+}
+
+.login-showcase,
+.login-access {
+  display: flex;
   align-items: stretch;
 }
 
@@ -73,6 +84,8 @@
   border-radius: 30px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(246, 250, 247, 0.76) 100%);
 }
+
+/* Brand header */
 
 .login-brandbar {
   display: flex;
@@ -112,6 +125,8 @@
   color: var(--login-muted);
 }
 
+/* Columna izquierda (hero + panel) */
+
 .login-showcase__content {
   display: grid;
   gap: 16px;
@@ -139,19 +154,24 @@
 
 .login-hero__title {
   margin: 0;
+  width: 100%;
+  max-width: 18ch;
   color: #102118;
   font-size: clamp(2rem, 1.46rem + 1.25vw, 3.25rem);
   line-height: 1.03;
   letter-spacing: -0.045em;
-  max-width: 11ch;
+  text-wrap: balance;
 }
 
 .login-hero__text {
   margin: 0;
-  max-width: 50ch;
+  width: 100%;
+  max-width: none;
   color: var(--login-muted);
   font-size: clamp(0.96rem, 0.92rem + 0.18vw, 1.04rem);
   line-height: 1.62;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .login-panel {
@@ -178,11 +198,16 @@
   line-height: 1.2;
 }
 
+/* Texto del panel justificado */
 .login-panel--feature p {
   margin: 0;
+  width: 100%;
+  max-width: none;
   color: var(--login-muted);
   line-height: 1.5;
   font-size: 0.88rem;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .login-benefits {
@@ -212,16 +237,19 @@
   flex-shrink: 0;
 }
 
+/* Columna derecha (formulario) */
+
 .login-access {
   display: flex;
   align-items: stretch;
+  align-self: stretch;
 }
 
 .login-access__card {
   width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   padding: clamp(24px, 2.8vw, 34px);
   border-radius: 30px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(251, 253, 252, 0.86) 100%);
@@ -261,11 +289,16 @@
   letter-spacing: -0.04em;
 }
 
+/* Subtítulo del formulario también justificado */
 .login-access__header p {
   margin: 0;
+  width: 100%;
+  max-width: none;
   color: var(--login-muted);
   font-size: 0.95rem;
   line-height: 1.55;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .login-error {
@@ -429,6 +462,8 @@
   }
 }
 
+/* Responsivo */
+
 @media (max-width: 1120px) {
   .login-shell {
     overflow: auto;
@@ -437,57 +472,5 @@
   .login-frame {
     height: auto;
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 720px) {
-  .login-shell {
-    padding: 14px;
-    overflow: auto;
-  }
-
-  .login-frame {
-    height: auto;
-    gap: 14px;
-  }
-
-  .login-showcase__surface,
-  .login-access__card {
-    border-radius: 24px;
-    padding: 20px;
-  }
-
-  .login-hero__title {
-    max-width: 12ch;
-  }
-
-  .login-benefits li {
-    align-items: flex-start;
-  }
-
-  .form-label-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-brandbar__tag {
-    font-size: 0.8rem;
-  }
-
-  .login-badge {
-    font-size: 0.74rem;
-  }
-
-  .login-hero__text,
-  .login-access__header p,
-  .login-panel--feature p {
-    font-size: 0.91rem;
-  }
-
-  .form-input,
-  .login-btn {
-    height: 52px;
   }
 }

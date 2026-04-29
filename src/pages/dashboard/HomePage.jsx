@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useEffect, useState } from "react";
 import "../../styles/home.css";
 
 const modules = [
@@ -26,7 +25,7 @@ const modules = [
         title: "Usuarios",
         description:
             "Administra accesos, perfiles y roles del sistema con una gestión más clara.",
-        path: "/usuarios",
+        path: "/users",
         badge: "Administración",
         tone: "blue",
         icon: (
@@ -53,82 +52,8 @@ function HomePage() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const [farms, setFarms] = useState([]);
-    const [lots, setLots] = useState([]);
-
-    const API_URL = import.meta.env.VITE_API_URL;
-
-    useEffect(() => {
-        async function loadData() {
-            try {
-                const resFincas = await fetch(`${API_URL}/fincas/`);
-                if (resFincas.ok) {
-                    const dataFincas = await resFincas.json();
-                    setFarms(dataFincas);
-                } else {
-                    console.error("Error al cargar fincas en Home:", resFincas.status);
-                }
-
-                const resLotes = await fetch(`${API_URL}/lotes/`);
-                if (resLotes.ok) {
-                    const dataLotes = await resLotes.json();
-                    setLots(dataLotes);
-                } else {
-                    console.error("Error al cargar lotes en Home:", resLotes.status);
-                }
-            } catch (error) {
-                console.error("Error de red al cargar estadísticas del inicio:", error);
-            }
-        }
-
-        loadData();
-    }, [API_URL]);
-
     const today = formatToday();
     const displayName = user?.nombre || user?.username || "administrador";
-
-    const stats = [
-        {
-            label: "Fincas registradas",
-            value: farms.length,
-            helper: "Base productiva",
-            tone: "success",
-            icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 20h18" />
-                    <path d="M6 20V10l6-4 6 4v10" />
-                    <path d="M10 20v-4h4v4" />
-                </svg>
-            ),
-        },
-        {
-            label: "Lotes activos",
-            value: lots.length,
-            helper: "Seguimiento operativo",
-            tone: "warning",
-            icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 18c3-4 5-6 8-6s5 2 8 6" />
-                    <path d="M8 9c1.5 1 3 2.5 4 5" />
-                    <path d="M16 7c-1 1.5-2 3-4 4" />
-                </svg>
-            ),
-        },
-        {
-            label: "Usuarios del sistema",
-            value: 4,
-            helper: "Accesos configurados",
-            tone: "info",
-            icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
-                    <circle cx="9.5" cy="8" r="3.5" />
-                    <path d="M19 8h2" />
-                    <path d="M20 7v2" />
-                </svg>
-            ),
-        },
-    ];
 
     return (
         <div className="home-page">
@@ -142,25 +67,10 @@ function HomePage() {
                     <h1 className="home-title">Bienvenido, {displayName}</h1>
                     <p className="home-date">{today}</p>
                     <p className="home-description">
-                        Visualiza el estado general del sistema y accede rápidamente a los módulos
-                        principales desde una portada más limpia, sólida y profesional.
+                        Accede rápidamente a los módulos principales desde una
+                        portada más limpia, sólida y profesional.
                     </p>
                 </div>
-            </section>
-
-            <section className="home-stats" aria-label="Indicadores principales">
-                {stats.map((stat) => (
-                    <article key={stat.label} className={`metric-card metric-card--${stat.tone}`}>
-                        <div className="metric-card__icon" aria-hidden="true">
-                            {stat.icon}
-                        </div>
-                        <div className="metric-card__content">
-                            <span className="metric-card__label">{stat.label}</span>
-                            <strong className="metric-card__value">{stat.value}</strong>
-                            <small className="metric-card__helper">{stat.helper}</small>
-                        </div>
-                    </article>
-                ))}
             </section>
 
             <section className="home-layout home-layout--single">
@@ -169,8 +79,9 @@ function HomePage() {
                         <span className="home-kicker">Accesos</span>
                         <h2>Módulos disponibles</h2>
                         <p>
-                            Áreas principales del sistema presentadas con mayor orden y jerarquía
-                            para entrar más rápido y con mejor lectura visual.
+                            Áreas principales del sistema presentadas con mayor
+                            orden y jerarquía para entrar más rápido y con mejor
+                            lectura visual.
                         </p>
                     </div>
 
