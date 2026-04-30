@@ -5,6 +5,9 @@ import HomePage from "./pages/dashboard/HomePage";
 import FarmsLotsPage from "./pages/farms/FarmsLotsPage";
 import UsersPage from "./pages/users/UsersPage";
 import LoginPage from "./pages/auth/LoginPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import ResetPasswordSuccessPage from "./pages/auth/ResetPasswordSuccessPage";
 import "./styles/app-layout.css";
 
 // Layout que envuelve la app con el Sidebar
@@ -32,8 +35,10 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />} />
+      <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
+      <Route path="/recuperar-contrasena/exito" element={<ResetPasswordSuccessPage />} />
+      <Route path="/restablecer-contrasena/:uidb64/:token" element={<ResetPasswordPage />} />
 
-      {/* Rutas protegidas dentro del MainLayout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/fincas-lotes" element={<FarmsLotsPage />} />
