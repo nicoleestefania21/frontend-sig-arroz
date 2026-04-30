@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
 import "../../styles/login.css";
 
 function LoginPage() {
@@ -150,8 +151,8 @@ function LoginPage() {
                   </label>
                   <button
                     type="button"
-                    className="login-forgot"
-                    onClick={() => alert("Contacta al administrador del sistema para restablecer tu acceso.")}
+                    className="login-link-button"
+                    onClick={() => navigate("/recuperar-contrasena")}
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
