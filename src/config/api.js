@@ -5,4 +5,5 @@ export const API = {
     users: `${BASE_URL}/users`,
     fincas: `${BASE_URL}/fincas`,
     lotes: `${BASE_URL}/lotes`,
+    sowings: `${BASE_URL}/sowings`,
 };

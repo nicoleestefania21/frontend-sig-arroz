@@ -219,6 +219,22 @@
     color: #0b6fa5;
 }
 
+/* ── Módulo siembra (amber tone) ──────────────────────────── */
+.module-card--amber {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #f59e0b22;
+}
+
+.module-card--amber .module-card__badge {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.module-card--amber .module-card__glyph {
+    background: #fef9c3;
+    color: #b45309;
+}
+
 @media (max-width: 900px) {
 
     .module-grid {

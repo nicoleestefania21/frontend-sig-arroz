@@ -97,6 +97,7 @@ function LoginPage() {
                 <ul className="login-benefits" role="list">
                   <li>Fincas y lotes mejor organizados</li>
                   <li>Usuarios y accesos más claros</li>
+                  <li>Registro de siembra integrado</li>
                 </ul>
               </article>
             </div>
