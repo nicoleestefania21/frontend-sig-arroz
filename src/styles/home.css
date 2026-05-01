@@ -235,6 +235,22 @@
     color: #b45309;
 }
 
+/* ── Módulo labores de terreno (earth tone) ───────────────── */
+.module-card--earth {
+    background: linear-gradient(135deg, #fffaf3 0%, #f6eadb 100%);
+    border-color: rgba(146, 98, 57, 0.16);
+}
+
+.module-card--earth .module-card__badge {
+    background: rgba(146, 98, 57, 0.12);
+    color: #8b5a2b;
+}
+
+.module-card--earth .module-card__glyph {
+    background: #f4e7d8;
+    color: #8b5a2b;
+}
+
 @media (max-width: 900px) {
 
     .module-grid {
