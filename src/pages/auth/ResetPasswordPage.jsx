@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { API } from "../../api";
 import "../../styles/forgot-password.css";
 
 function ResetPasswordPage() {
@@ -37,13 +38,33 @@ function ResetPasswordPage() {
 
         setLoading(true);
 
-        setTimeout(() => {
-            setLoading(false);
-            navigate("/recuperar-contrasena/exito", { replace: true });
-        }, 900);
-    };
+        try {
+            const res = await fetch(`${API.users}/password-reset-confirm/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    uidb64,
+                    token,
+                    password: form.password,
+                    confirm_password: form.confirmPassword,
+                }),
+            });
 
-    const tokenPreview = uidb64 && token;
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data?.error || "No se pudo actualizar la contraseña.");
+            }
+
+            navigate("/recuperar-contrasena/exito", { replace: true });
+        } catch (err) {
+            setError(err.message || "Ocurrió un error al actualizar la contraseña.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="fp-shell">

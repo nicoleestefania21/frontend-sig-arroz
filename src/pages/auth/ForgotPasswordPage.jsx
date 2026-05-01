@@ -1,20 +1,40 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { API } from "../../api";
 import "../../styles/forgot-password.css";
 
 function ForgotPasswordPage() {
     const [identifier, setIdentifier] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
 
-        setTimeout(() => {
+        try {
+            const res = await fetch(`${API.users}/password-reset/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ identifier }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data?.error || "No se pudo procesar la solicitud.");
+            }
+
             setSubmitted(true);
+        } catch (err) {
+            setError(err.message || "Ocurrió un error al enviar la solicitud.");
+        } finally {
             setLoading(false);
-        }, 900);
+        }
     };
 
     return (
