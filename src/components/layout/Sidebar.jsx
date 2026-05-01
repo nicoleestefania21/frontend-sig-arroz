@@ -133,6 +133,50 @@ function Sidebar() {
 
           <li>
             <NavLink
+              to="/labores-terreno"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M4 20H20"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M6 16L9.5 12.5L12 15L16.5 9.5L18 11"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M7 7H7.01"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12 7H12.01"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M17 7H17.01"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              <span className="sidebar-nav-label">Labores de terreno</span>
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink
               to="/sowing"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
