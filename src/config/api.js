@@ -6,4 +6,5 @@ export const API = {
     fincas: `${BASE_URL}/fincas`,
     lotes: `${BASE_URL}/lotes`,
     sowings: `${BASE_URL}/sowings`,
+    labores: `${BASE_URL}/labores`,
 };

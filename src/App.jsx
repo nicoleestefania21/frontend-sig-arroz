@@ -9,6 +9,7 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ResetPasswordSuccessPage from "./pages/auth/ResetPasswordSuccessPage";
 import SowingPage from "./pages/sowing/SowingPage";
+import TerrainWorksPage from "./pages/terrain/TerrainWorksPage";
 import "./styles/app-layout.css";
 
 // Layout que envuelve la app con el Sidebar
@@ -43,6 +44,7 @@ function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/fincas-lotes" element={<FarmsLotsPage />} />
+        <Route path="/labores-terreno" element={<TerrainWorksPage />} />
         <Route path="/sowing" element={<SowingPage />} />
         <Route path="/users" element={<UsersPage />} />
       </Route>
