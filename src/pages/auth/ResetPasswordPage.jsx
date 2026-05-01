@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { API } from "../../api";
+import { API } from "../../config/api.js";
 import "../../styles/forgot-password.css";
 
 function ResetPasswordPage() {
