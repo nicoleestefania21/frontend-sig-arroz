@@ -131,6 +131,38 @@ function Sidebar() {
             </NavLink>
           </li>
 
+          <li>
+            <NavLink
+              to="/sowing"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 22V12"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12 12C12 12 8 10 8 6C8 3.79 9.79 2 12 2C14.21 2 16 3.79 16 6C16 10 12 12 12 12Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 22H18"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              <span className="sidebar-nav-label">Registro de siembra</span>
+            </NavLink>
+          </li>
+
           {isAdmin && (
             <li>
               <NavLink

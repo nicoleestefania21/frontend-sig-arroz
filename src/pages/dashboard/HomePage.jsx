@@ -22,6 +22,21 @@ const modules = [
         ),
     },
     {
+        title: "Registro de siembra",
+        description:
+            "Registra y gestiona las siembras asociadas a los lotes de cada finca.",
+        path: "/sowing",
+        badge: "Producción",
+        tone: "amber",
+        icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22V12" />
+                <path d="M12 12C12 12 8 10 8 6C8 3.79 9.79 2 12 2C14.21 2 16 3.79 16 6C16 10 12 12 12 12Z" />
+                <path d="M6 22H18" />
+            </svg>
+        ),
+    },
+    {
         title: "Usuarios",
         description:
             "Administra accesos, perfiles y roles del sistema con una gestión más clara.",
