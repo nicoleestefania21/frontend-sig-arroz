@@ -207,6 +207,34 @@ function Sidebar() {
             </NavLink>
           </li>
 
+          {/* NUEVO: enlace a ciclos productivos */}
+          <li>
+            <NavLink
+              to="/ciclos"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="6"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <path
+                    d="M12 8V12L15 14"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <span className="sidebar-nav-label">Ciclos productivos</span>
+            </NavLink>
+          </li>
+
           {isAdmin && (
             <li>
               <NavLink

@@ -13,18 +13,25 @@ import TerrainWorksPage from "./pages/terrain/TerrainWorksPage";
 import RoleRoute from "./components/auth/RoleRoute";
 import "./styles/app-layout.css";
 
-// Layout que envuelve la app con el Sidebar
+// NUEVO: importa la página de ciclos
+import CyclesPage from "./pages/cycles/CyclesPage";
+
 function MainLayout() {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div style={{ padding: "50px", textAlign: "center" }}>Cargando SIG-ARROZ...</div>;
+  if (loading)
+    return (
+      <div style={{ padding: "50px", textAlign: "center" }}>
+        Cargando SIG-ARROZ...
+      </div>
+    );
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
     <div className="app-layout">
       <Sidebar />
       <main className="main-content">
-        <Outlet /> {/* Aquí se renderiza la página activa */}
+        <Outlet />
       </main>
     </div>
   );
@@ -33,20 +40,41 @@ function MainLayout() {
 function App() {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div style={{ padding: "50px", textAlign: "center" }}>Cargando SIG-ARROZ...</div>;
+  if (loading)
+    return (
+      <div style={{ padding: "50px", textAlign: "center" }}>
+        Cargando SIG-ARROZ...
+      </div>
+    );
 
   return (
     <Routes>
-      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />} />
-      <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
-      <Route path="/recuperar-contrasena/exito" element={<ResetPasswordSuccessPage />} />
-      <Route path="/restablecer-contrasena/:uidb64/:token" element={<ResetPasswordPage />} />
+      <Route
+        path="/login"
+        element={
+          !isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />
+        }
+      />
+      <Route
+        path="/recuperar-contrasena"
+        element={<ForgotPasswordPage />}
+      />
+      <Route
+        path="/recuperar-contrasena/exito"
+        element={<ResetPasswordSuccessPage />}
+      />
+      <Route
+        path="/restablecer-contrasena/:uidb64/:token"
+        element={<ResetPasswordPage />}
+      />
 
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/fincas-lotes" element={<FarmsLotsPage />} />
         <Route path="/labores-terreno" element={<TerrainWorksPage />} />
         <Route path="/sowing" element={<SowingPage />} />
+        {/* NUEVO: ruta de ciclos productivos */}
+        <Route path="/ciclos" element={<CyclesPage />} />
         <Route
           path="/users"
           element={
