@@ -3,6 +3,7 @@ import SowingForm from "../../components/sowing/SowingForm";
 import SowingTable from "../../components/sowing/SowingTable";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/sowing.css";
+import { API } from "../../config/api";
 
 // ── MOCK CICLOS (HU#3 pendiente) ─────────────────────────────
 // TODO (HU#3): Reemplazar por GET /api/ciclos/?lote=<id>
@@ -117,6 +118,23 @@ function SowingPage() {
   //   loadCycles();
   // }, []);
 
+  useEffect(() => {
+  async function loadSowings() {
+    try {
+      const res = await authFetch(API.sowings + "/");
+      if (res.ok) {
+        const data = await res.json();
+        setSowings(data);
+      } else {
+        console.warn("Error cargando siembras:", res.status);
+      }
+    } catch (err) {
+      console.warn("Error cargando siembras:", err.message);
+    }
+  }
+  loadSowings();
+}, []);
+
   // ── ESTADÍSTICAS ──────────────────────────────────────────
   const sowingStats = useMemo(() => {
     const activas = sowings.filter((s) => isSowingActive(s, cycles)).length;
@@ -130,40 +148,66 @@ function SowingPage() {
 
   // ── GUARDAR ───────────────────────────────────────────────
   const handleSave = async (payload) => {
-    setSavingForm(true);
-    setErrorMsg("");
-    setSuccessMsg("");
-    try {
-      /**
-       * TODO (Backend): Reemplazar el mock por:
-       *   const res = await authFetch(`${VITE_API_URL}/sowings/`, {
-       *     method: "POST",
-       *     body: JSON.stringify(payload),
-       *   });
-       *   if (!res.ok) throw new Error("Error al crear siembra");
-       *   const nueva = await res.json();
-       */
-      const nueva = { id: nextId.current++, ...payload, creado_en: new Date().toISOString() };
-      setSowings((prev) => [...prev, nueva]);
-      setSuccessMsg("✓ Siembra registrada correctamente.");
-      setTimeout(() => setSuccessMsg(""), 4000);
-    } catch (err) {
-      console.error("Error al guardar siembra:", err);
-      setErrorMsg("No se pudo guardar la siembra. Intenta de nuevo.");
-    } finally {
-      setSavingForm(false);
+  setSavingForm(true);
+  setErrorMsg("");
+  setSuccessMsg("");
+  try {
+    console.log("Payload que se envía a la API:", payload);
+
+    const res = await authFetch(API.sowings + "/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        lote: payload.lote,
+        fecha_siembra: payload.fecha_siembra,
+        variedad: payload.variedad,
+        densidad_siembra: payload.densidad_kg_ha,
+        metodo_siembra: payload.metodo_siembra,
+        observaciones: payload.observaciones,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => null);
+      console.error("Error al crear siembra:", res.status, errorBody);
+      // muestra el detalle en UI para que veas el campo
+      setErrorMsg(
+        "Error 400 del backend: " + JSON.stringify(errorBody)
+      );
+      throw new Error("Error al crear siembra");
     }
-  };
+
+    const nueva = await res.json();
+    setSowings((prev) => [...prev, nueva]);
+    setSuccessMsg("✓ Siembra registrada correctamente.");
+    setTimeout(() => setSuccessMsg(""), 4000);
+  } catch (err) {
+    console.error("Error al guardar siembra:", err);
+    if (!errorMsg) {
+      setErrorMsg("No se pudo guardar la siembra. Intenta de nuevo.");
+    }
+  } finally {
+    setSavingForm(false);
+  }
+};
 
   // ── ELIMINAR ──────────────────────────────────────────────
   const handleDelete = async (id) => {
-    try {
-      // TODO (Backend): await authFetch(`${VITE_API_URL}/sowings/${id}/`, { method: "DELETE" });
-      setSowings((prev) => prev.filter((s) => s.id !== id));
-    } catch (err) {
-      setErrorMsg("No se pudo eliminar la siembra.");
+  try {
+    const res = await authFetch(`${API.sowings}/${id}/`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      throw new Error("Error al eliminar siembra");
     }
-  };
+    setSowings((prev) => prev.filter((s) => s.id !== id));
+  } catch (err) {
+    console.error(err);
+    setErrorMsg("No se pudo eliminar la siembra.");
+  }
+};
 
   return (
     <div className="sowing-page">

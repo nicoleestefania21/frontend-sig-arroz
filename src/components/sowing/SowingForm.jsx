@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const METODOS_SIEMBRA = [
   { value: "TRASPLANTE", label: "Trasplante" },
-  { value: "SIEMBRA_DIRECTA", label: "Siembra directa" },
+  { value: "DIRECTA", label: "Siembra directa" }, // antes SIEMBRA_DIRECTA
   { value: "VOLEO", label: "Voleo" },
 ];
 

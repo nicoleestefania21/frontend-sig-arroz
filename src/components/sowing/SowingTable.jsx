@@ -3,19 +3,19 @@
  * ------------
  * Muestra las siembras registradas para el lote seleccionado.
  * Props:
- *  - siembras  {Array}    Lista de siembras a mostrar
- *  - lots      {Array}    Lista de lotes (para mostrar nombre en vez de ID)
- *  - onDelete  {Function} Callback para eliminar una siembra por ID
+ *  - sowings  {Array}    Lista de siembras a mostrar
+ *  - lots     {Array}    Lista de lotes (para mostrar nombre en vez de ID)
+ *  - onDelete {Function} Callback para eliminar una siembra por ID
  */
 
 const METODO_LABELS = {
   TRASPLANTE: "Trasplante",
-  SIEMBRA_DIRECTA: "Siembra directa",
+  DIRECTA: "Siembra directa",
   VOLEO: "Voleo",
 };
 
-function SowingTable({ siembras = [], lots = [], onDelete }) {
-  if (siembras.length === 0) {
+function SowingTable({ sowings = [], lots = [], onDelete }) {
+  if (sowings.length === 0) {
     return (
       <div className="section-header">
         <h2>Siembras registradas</h2>
@@ -41,7 +41,9 @@ function SowingTable({ siembras = [], lots = [], onDelete }) {
     <div className="siembra-table-wrapper">
       <div className="section-header">
         <h2>Siembras registradas</h2>
-        <p>{siembras.length} siembra{siembras.length !== 1 ? "s" : ""} en este ciclo.</p>
+        <p>
+          {sowings.length} siembra{sowings.length !== 1 ? "s" : ""} en este ciclo.
+        </p>
       </div>
 
       <div className="table-scroll">
@@ -53,30 +55,27 @@ function SowingTable({ siembras = [], lots = [], onDelete }) {
               <th>Variedad</th>
               <th>Densidad (kg/ha)</th>
               <th>Método</th>
-              {/*
-               * TODO (HU#3): Agregar columna "Ciclo" cuando la entidad
-               * ciclo esté implementada en el backend.
-               */}
+              {/* TODO (HU#3): Agregar columna "Ciclo" cuando la entidad ciclo esté en backend */}
               <th>Ciclo</th>
               <th>Observaciones</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {siembras.map((s) => (
+            {sowings.map((s) => (
               <tr key={s.id}>
                 <td>{getLoteName(s.lote)}</td>
                 <td>{formatDate(s.fecha_siembra)}</td>
                 <td>{s.variedad}</td>
-                <td>{s.densidad_kg_ha}</td>
+                <td>{s.densidad_siembra}</td>
                 <td>
                   <span className="badge badge--method">
                     {METODO_LABELS[s.metodo_siembra] || s.metodo_siembra}
                   </span>
                 </td>
-                {/* TODO (HU#3): Mostrar nombre real del ciclo */}
+                {/* HU#3 pendiente: de momento ciclo_id es mock */}
                 <td>
-                  <span className="badge badge--mock">{s.ciclo_id} ⚠</span>
+                  <span className="badge badge--mock">{s.ciclo_id ?? "—"} ⚠</span>
                 </td>
                 <td className="td-obs">{s.observaciones || "—"}</td>
                 <td>
